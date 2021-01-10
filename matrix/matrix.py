@@ -1,18 +1,8 @@
-#!/usr/bin/env python3.8
-
 """Definitions of the various classes."""
 
 from itertools import starmap
 
-
-class InitDocMeta(type):
-    """A metaclass that sets the docstring of it's instances' `__init__` to the class'"""
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        # Set `__init__` method's docstring to that of the class.
-        self.__init__.__doc__ = self.__doc__
+from .utils import *
 
 
 class Matrix:
@@ -61,7 +51,7 @@ class Matrix:
             else:
                 raise ValueError("Both dimensions must be positive integers.")
         elif hasattr(rows_array, "__iter__") and isinstance(cols_zfill, (type(None), bool)):
-            minlen, maxlen, self.__nrow, array = self.__check_iterable(rows_array)
+            minlen, maxlen, self.__nrow, array = check_iterable(rows_array)
 
             if maxlen == 0:
                 raise ValueError("The inner iterables are empty.\n"
@@ -94,6 +84,9 @@ class Matrix:
 
     ncol = property(lambda self: self.__ncol, doc="Gets number of columns of the matrix.")
 
+    size = property(lambda self: (self.__nrow, self.__ncol),
+                    doc="Gets dimension of the matrix.")
+
 
     def __repr__(self):
         return "{}({}, {})".format(type(self).__name__, self.__nrow, self.__ncol)
@@ -110,27 +103,49 @@ class Matrix:
             + '\n' + bar)
 
 
-    @staticmethod
-    def __check_iterable(iterable):
+    def __getitem__(self, sub):
         """
-        Checks if `iterable` represents a two dimensional array of integers.
+        Returns:
+        - element at given position, if `sub` is a tuple of integers `(row, col)`.
+          e.g `matrix[1, 2]`
+          - Indices must be in range
+          - Negative indices are not allowed.
+        - a new Matrix instance, if `sub` is a tuple of slices.
+          e.g `matrix[1:3, 3:4]`
+          - the first slice selects rows.
+          - the second slice selects columns.
+          - slices out of range are "forgiven".
+          - Negative indices or steps are not allowed.
 
-        If so, returns the
-        - shortest row lenght,
-        - longest row lenght,
-        - number of rows,
-        - resulting array as a list.
+        NOTE:
+          - Both Row and Column are **indexed starting from `1`**.
+          - A **slice includes `stop`**.
         """
 
-        try:
-            array = [[int(element) for element in row] for row in iterable]
-        except TypeError:
-            raise TypeError("The array argument should be an iterable"
-                            " of iterables of integers.") from None
+        if isinstance(sub, tuple) and len(sub) == 2:
 
-        lengths = [len(row) for row in array]
+            if all(isinstance(x, int) for x in sub):
+                row, col = sub
+                if 0 < row <= self.__nrow and 0 < col <= self.__ncol:
+                    return self.__array[row - 1][col - 1]
+                else:
+                    raise IndexError("Row and/or Column index is/are"
+                                    " either out of range or negative.")
 
-        return min(lengths), max(lengths), len(array), array
+            elif all(isinstance(x, slice) for x in sub):
+                if not all(map(valid_slice, sub)):
+                    raise ValueError("start, stop or step of slice cannot be negative.")
+
+                rows, cols = starmap(adjust_slice, zip(sub, self.size))
+                return type(self)(row[cols] for row in self.__array[rows])
+
+            else:
+                raise TypeError(
+                        "Matrixes only support subscription of elements or submatrices.")
+        else:
+            raise TypeError(
+                "Subscript element must be a tuple of integers or slices\n"
+                "\t(with or without parenthesis).") from None
 
 
 class Rows:
