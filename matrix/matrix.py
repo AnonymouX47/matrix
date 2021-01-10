@@ -2,6 +2,8 @@
 
 """Definitions of the various classes."""
 
+from itertools import starmap
+
 
 class InitDocMeta(type):
     """A metaclass that sets the docstring of it's instances' `__init__` to the class'"""
@@ -93,6 +95,21 @@ class Matrix:
     ncol = property(lambda self: self.__ncol, doc="Gets number of columns of the matrix.")
 
 
+    def __repr__(self):
+        return "{}({}, {})".format(type(self).__name__, self.__nrow, self.__ncol)
+
+    def __str__(self):
+        column_widths = [len(str(max(column))) for column in self.__columns]
+        width_fmt = [f"^{width}" for width in column_widths]
+
+        bar = '\u2015' * (sum(column_widths) + self.__ncol * 3  + 1)
+
+        return (bar
+            + ('\n' + bar).join('\n| ' + ' | '.join(starmap(format, zip(row, width_fmt))) + ' |'
+                            for row in self.__array)
+            + '\n' + bar)
+
+
     @staticmethod
     def __check_iterable(iterable):
         """
@@ -123,7 +140,10 @@ class Rows:
     """
 
     def __init__(self, matrix):
-        pass
+        self.__matrix = matrix
+
+    def __iter__(self):
+        return (row.copy() for row in self.__matrix._array)
 
 
 class Columns:
@@ -132,5 +152,8 @@ class Columns:
     """
 
     def __init__(self, matrix):
-        pass
+        self.__matrix = matrix
+
+    def __iter__(self):
+        return ([row[col] for row in self.__matrix._array] for col in range(self.__matrix.ncol))
 
