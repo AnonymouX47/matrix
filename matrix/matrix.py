@@ -54,8 +54,7 @@ class Matrix:
             minlen, maxlen, self.__nrow, array = check_iterable(rows_array)
 
             if maxlen == 0:
-                raise ValueError("The inner iterables are empty.\n"
-                                "\tBoth dimensions must be greater than zero.")
+                raise ValueError("The inner iterables are empty.")
 
             if minlen == maxlen:
                 self.__array = array
@@ -76,9 +75,9 @@ class Matrix:
 
     _array = property(lambda self: self.__array, doc="Gets underlying array of the matrix.")
 
-    rows = property(lambda self: self.__rows, doc="Gets Rows() object of the matrix.")
+    rows = property(lambda self: self.__rows, doc="Gets Rows() instance of the matrix.")
 
-    columns = property(lambda self: self.__columns, doc="Gets Colums() object of the matrix.")
+    columns = property(lambda self: self.__columns, doc="Gets Columns() instance of the matrix.")
 
     nrow = property(lambda self: self.__nrow, doc="Gets number of rows of the matrix.")
 
@@ -140,7 +139,8 @@ class Matrix:
 
             elif all(isinstance(x, slice) for x in sub):
                 if not all(map(valid_slice, sub)):
-                    raise ValueError("start, stop or step of slice cannot be negative.")
+                    raise ValueError("start, stop or step of a slice cannot be negative."
+                                    " Also make sure `start <= stop` in the slices.")
 
                 rows, cols = starmap(adjust_slice, zip(sub, self.size))
                 return type(self)(row[cols] for row in self.__array[rows])
@@ -179,7 +179,8 @@ class Matrix:
 
             elif all(isinstance(x, slice) for x in sub):
                 if not all(map(valid_slice, sub)):
-                    raise ValueError("start, stop or step of slice cannot be negative.")
+                    raise ValueError("start, stop or step of a slice cannot be negative."
+                                    " Also make sure `start <= stop` in the slices.")
 
                 rows, cols = starmap(adjust_slice, zip(sub, self.size))
 

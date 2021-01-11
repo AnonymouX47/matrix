@@ -1,13 +1,18 @@
 """Definitions of utility classes and functions meant for the main classes."""
 
-def adjust_slice(s, stop):
-    """Changes a slice object for a 1-indexed sequence to the equivalent 0-index form"""
+def adjust_slice(s: slice, stop: int) -> slice:
+    """ Changes a slice for a 1-indexed sequence to the equivalent 0-index form. """
 
     s = s.indices(stop)
+
+    # Leaves the 'stop' attribute unchanged
+    # since matrixes include the (1-indexed) 'stop' index for slicing operations.
     return slice(max(0, s[0]-1), *s[1:])
 
-def valid_slice(s):
-    return all((x or 0) >= 0 for x in (s.start, s.stop, s.step))
+def valid_slice(s: slice):
+    """Returns a boolean indicating if the given slice is valid for a matrix."""
+
+    return all((x or 0) >= 0 for x in (s.start, s.stop, s.step)) and s.start <= s.stop
 
 def check_iterable(iterable):
     """
@@ -26,7 +31,10 @@ def check_iterable(iterable):
         raise TypeError("The array should be an iterable"
                         " of iterables of integers.") from None
 
-    lengths = [len(row) for row in array]
+    if array:
+        lengths = [len(row) for row in array]
+    else:
+        raise TypeError("The given iterable is empty.")
 
     return min(lengths), max(lengths), len(array), array
 
