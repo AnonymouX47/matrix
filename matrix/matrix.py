@@ -92,14 +92,20 @@ class Matrix:
         return "{}({}, {})".format(type(self).__name__, self.__nrow, self.__ncol)
 
     def __str__(self):
-        column_widths = [len(str(max(column))) for column in self.__columns]
+        """
+        Number with longest str() in a column determines that column's width.
+        The longest number must either be the most +ve or most -ve.
+        """
+
+        column_widths = [max(map(len, map(str, (min(column), max(column)))))
+                        for column in self.__columns]
         width_fmt = [f"^{width}" for width in column_widths]
 
         bar = '\u2015' * (sum(column_widths) + self.__ncol * 3  + 1)
 
         return (bar
             + ('\n' + bar).join('\n| ' + ' | '.join(starmap(format, zip(row, width_fmt))) + ' |'
-                            for row in self.__array)
+                                for row in self.__array)
             + '\n' + bar)
 
 
@@ -111,7 +117,7 @@ class Matrix:
           - Indices must be in range
           - Negative indices are not allowed.
         - a new Matrix instance, if `sub` is a tuple of slices.
-          e.g `matrix[1:3, 3:4]`
+          e.g `matrix[::2, 3:4]`
           - the first slice selects rows.
           - the second slice selects columns.
           - slices out of range are "forgiven".
@@ -139,6 +145,60 @@ class Matrix:
                 rows, cols = starmap(adjust_slice, zip(sub, self.size))
                 return type(self)(row[cols] for row in self.__array[rows])
 
+            else:
+                raise TypeError(
+                        "Matrixes only support subscription of elements or submatrices.")
+        else:
+            raise TypeError(
+                "Subscript element must be a tuple of integers or slices\n"
+                "\t(with or without parenthesis).") from None
+
+    def __setitem__(self, sub, value):
+        """
+        Subscript is interpreted just as for get operation.
+
+        'value' must be:
+        - an integer, if 'sub' references an element.
+        - a Matrix instance or 2D array of integers with appropriate dimensions,
+          if 'sub' references a "block-slice".
+        """
+
+        if isinstance(sub, tuple) and len(sub) == 2:
+
+            if all(isinstance(x, int) for x in sub):
+                row, col = sub
+                if 0 < row <= self.__nrow and 0 < col <= self.__ncol:
+                    if isinstance(value, int):
+                        self.__array[row - 1][col - 1] = value
+                    else:
+                        raise TypeError("Matrix elements can only be integers,"
+                                        f" not {type(value)}() objects.")
+                else:
+                    raise IndexError("Row and/or Column index is/are"
+                                    " either out of range or negative.")
+
+            elif all(isinstance(x, slice) for x in sub):
+                if not all(map(valid_slice, sub)):
+                    raise ValueError("start, stop or step of slice cannot be negative.")
+
+                rows, cols = starmap(adjust_slice, zip(sub, self.size))
+
+                if isinstance(value, __class__):
+                    array = value.__array
+                    checks = (value.__ncol == cols.stop - cols.start
+                              and value.__nrow == rows.stop - rows.start)
+                else:
+                    minlen, maxlen, nrow, array = check_iterable(value)
+                    checks = (minlen == maxlen
+                              and maxlen == cols.stop - cols.start
+                              and nrow == rows.stop - rows.start)
+
+                if checks:
+                    for row, _slice in zip(self.__array[rows], array):
+                        row[cols] = _slice
+                else:
+                    raise ValueError("The array is not of an appropriate dimension"
+                                     " for the given block-slice.")
             else:
                 raise TypeError(
                         "Matrixes only support subscription of elements or submatrices.")

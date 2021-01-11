@@ -23,7 +23,7 @@ def check_iterable(iterable):
     try:
         array = [[int(element) for element in row] for row in iterable]
     except TypeError:
-        raise TypeError("The array argument should be an iterable"
+        raise TypeError("The array should be an iterable"
                         " of iterables of integers.") from None
 
     lengths = [len(row) for row in array]
