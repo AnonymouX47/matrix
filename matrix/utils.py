@@ -1,7 +1,11 @@
 """Definitions of utility classes and functions meant for the main classes."""
 
 def adjust_slice(s: slice, stop: int) -> slice:
-    """ Changes a slice for a 1-indexed sequence to the equivalent 0-index form. """
+    """
+    Changes a slice for a 1-indexed sequence to the equivalent 0-index form.
+
+    'stop' is the length of the sequence for which the slice is being adjusted.
+    """
 
     s = s.indices(stop)
 
@@ -9,10 +13,13 @@ def adjust_slice(s: slice, stop: int) -> slice:
     # since matrixes include the (1-indexed) 'stop' index for slicing operations.
     return slice(max(0, s[0]-1), *s[1:])
 
+
 def valid_slice(s: slice):
     """Returns a boolean indicating if the given slice is valid for a matrix."""
 
-    return all((x or 0) >= 0 for x in (s.start, s.stop, s.step)) and s.start <= s.stop
+    return (all(x is None or x > 0 for x in (s.start, s.stop, s.step))
+            and (s.stop is None or (s.start or 1) <= s.stop))
+
 
 def check_iterable(iterable):
     """

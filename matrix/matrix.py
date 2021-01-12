@@ -124,12 +124,12 @@ class Matrix:
                     return self.__array[row - 1][col - 1]
                 else:
                     raise IndexError("Row and/or Column index is/are"
-                                    " either out of range or negative.")
+                                    " either out of range or less than 1.")
 
             elif all(isinstance(x, slice) for x in sub):
                 if not all(map(valid_slice, sub)):
-                    raise ValueError("start, stop or step of a slice cannot be negative."
-                                    " Also make sure `start <= stop` in the slices.")
+                    raise ValueError("start, stop or step of a slice must be > 0."
+                                    " Make sure `start <= stop` if both are specified.")
 
                 rows, cols = starmap(adjust_slice, zip(sub, self.size))
                 return type(self)(row[cols] for row in self.__array[rows])
@@ -164,12 +164,12 @@ class Matrix:
                                         f" not {type(value)}() objects.")
                 else:
                     raise IndexError("Row and/or Column index is/are"
-                                    " either out of range or negative.")
+                                    " either out of range or less than 1.")
 
             elif all(isinstance(x, slice) for x in sub):
                 if not all(map(valid_slice, sub)):
-                    raise ValueError("start, stop or step of a slice cannot be negative."
-                                    " Also make sure `start <= stop` in the slices.")
+                    raise ValueError("start, stop or step of a slice must be > 0."
+                                    " Make sure `start <= stop` if both are specified.")
 
                 rows, cols = starmap(adjust_slice, zip(sub, self.size))
 
@@ -232,7 +232,7 @@ class Matrix:
         NOTE: this argument is meant for internal use only.
         """
 
-        if not all(x is None or isinstance(x, int) for x in (nrow, ncol)):
+        if not all(isinstance(x, (type(None), int)) for x in (nrow, ncol)):
             # At least one value given for new dimnsion is of a wrong type.
             raise TypeError("Any specified dimension must be an integer.")
 
