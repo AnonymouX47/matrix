@@ -31,6 +31,9 @@ class Matrix:
 
     __slots__ = ("__array", "__nrow", "__ncol", "__rows", "__columns")
 
+
+    # Implicit Operations
+
     def __init__(self, rows_array=None, cols_zfill=None):
         """
         Two signatures:
@@ -61,7 +64,7 @@ class Matrix:
                 self.__ncol = maxlen
             elif cols_zfill:
                 self.__array = array
-                self.resize(self.__nrow, maxlen)
+                self.resize(ncol=maxlen, pad_rows=True)
             else:
                 raise ValueError("'zfill' should be `True`"
                                 " when the array has variable row lengths.")
@@ -71,20 +74,6 @@ class Matrix:
 
         self.__rows = Rows(self)
         self.__columns = Columns(self)
-
-
-    _array = property(lambda self: self.__array, doc="Gets underlying array of the matrix.")
-
-    rows = property(lambda self: self.__rows, doc="Gets Rows() instance of the matrix.")
-
-    columns = property(lambda self: self.__columns, doc="Gets Columns() instance of the matrix.")
-
-    nrow = property(lambda self: self.__nrow, doc="Gets number of rows of the matrix.")
-
-    ncol = property(lambda self: self.__ncol, doc="Gets number of columns of the matrix.")
-
-    size = property(lambda self: (self.__nrow, self.__ncol),
-                    doc="Gets dimension of the matrix.")
 
 
     def __repr__(self):
@@ -207,6 +196,71 @@ class Matrix:
             raise TypeError(
                 "Subscript element must be a tuple of integers or slices\n"
                 "\t(with or without parenthesis).") from None
+
+    # Properties
+
+    _array = property(lambda self: self.__array, doc="Gets underlying array of the matrix.")
+
+    rows = property(lambda self: self.__rows, doc="Gets Rows() instance of the matrix.")
+
+    columns = property(lambda self: self.__columns, doc="Gets Columns() instance of the matrix.")
+
+    nrow = property(lambda self: self.__nrow, doc="Gets number of rows of the matrix.")
+
+    ncol = property(lambda self: self.__ncol, doc="Gets number of columns of the matrix.")
+
+    size = property(lambda self: (self.__nrow, self.__ncol),
+                    doc="Gets dimension of the matrix.")
+
+
+    # Explicit Operations
+
+    def resize(self, nrow: int = None, ncol: int = None, *, pad_rows=False):
+        """
+        Resizes the matrix.
+
+        Truncates, if the new dimension is less than the current for either or both axes.
+        Zero-fills, if the new dimension is greater than the current on either or both axes.
+
+        If 'pad_rows' is true, pad each row of the underlying array
+        to match up to the given number of columns.
+        NOTE: this argument is meant for internal use only.
+        """
+
+        if not all(x is None or isinstance(x, int) for x in (nrow, ncol)):
+            # At least one value given for new dimnsion is of a wrong type.
+            raise TypeError("Any specified dimension must be an integer.")
+
+        if any(None is not x < 1 for x in (nrow, ncol)):
+            # At least one of the new dimensions given is less than 1.
+            raise ValueError("Any specified dimension must be +ve.")
+
+        # Number of rows
+        if nrow:  # 'nrow' can only be either None or a +ve integer at this point.
+            diff = nrow - self.__nrow
+            if diff > 0:
+                self.__array.extend([[0] * self.__ncol] * diff)
+            elif diff < 0:
+                # Delete the last `-diff` rows (**in-place**).
+                self.__array[:] = self.__array[:diff]
+            self.__nrow = nrow
+
+        # Number of columns
+        if ncol:  # 'ncol' can only be either None or a +ve integer at this point.
+            if pad_rows:
+                for row in self.__array: row.extend([0] * (ncol - len(row)))
+                self.__ncol = ncol
+                return
+
+            diff = ncol - self.__ncol
+            if diff > 0:
+                for row in self.__array: row.extend([0] * diff)
+            elif diff < 0:
+                # Delete the last `-diff` elements in each row (**in-place**).
+                for row in self.__array: row[:] = row[:diff]
+            self.__ncol = ncol
+        elif pad_rows:
+            raise ValueError("Number of columns not specified for padding.")
 
 
 class Rows:
