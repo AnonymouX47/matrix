@@ -199,15 +199,20 @@ class Matrix:
 
     # Properties
 
-    _array = property(lambda self: self.__array, doc="Gets underlying array of the matrix.")
+    _array = property(lambda self: self.__array,
+                        doc="Gets underlying array of the matrix.")
 
-    rows = property(lambda self: self.__rows, doc="Gets Rows() instance of the matrix.")
+    rows = property(lambda self: self.__rows,
+                    doc="Gets Rows() instance of the matrix.")
 
-    columns = property(lambda self: self.__columns, doc="Gets Columns() instance of the matrix.")
+    columns = property(lambda self: self.__columns,
+                        doc="Gets Columns() instance of the matrix.")
 
-    nrow = property(lambda self: self.__nrow, doc="Gets number of rows of the matrix.")
+    nrow = property(lambda self: self.__nrow,
+                    doc="Gets number of rows of the matrix.")
 
-    ncol = property(lambda self: self.__ncol, doc="Gets number of columns of the matrix.")
+    ncol = property(lambda self: self.__ncol,
+                    doc="Gets number of columns of the matrix.")
 
     size = property(lambda self: (self.__nrow, self.__ncol),
                     doc="Gets dimension of the matrix.")
@@ -285,5 +290,6 @@ class Columns:
         self.__matrix = matrix
 
     def __iter__(self):
-        return ([row[col] for row in self.__matrix._array] for col in range(self.__matrix.ncol))
+        return ([row[col] for row in self.__matrix._array]
+                for col in range(self.__matrix.ncol))
 
