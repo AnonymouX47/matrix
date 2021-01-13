@@ -1,7 +1,5 @@
 """Definitions of the various classes."""
 
-from itertools import starmap
-
 from .utils import *
 
 
@@ -92,7 +90,7 @@ class Matrix:
         bar = '\u2015' * (sum(column_widths) + self.__ncol * 3  + 1)
 
         return (bar
-            + ('\n' + bar).join('\n| ' + ' | '.join(starmap(format, zip(row, width_fmt))) + ' |'
+            + ('\n' + bar).join('\n| ' + ' | '.join(map(format, row, width_fmt)) + ' |'
                                 for row in self.__array)
             + '\n' + bar)
 
@@ -131,7 +129,7 @@ class Matrix:
                     raise ValueError("start, stop or step of a slice must be > 0."
                                     " Make sure `start <= stop` if both are specified.")
 
-                rows, cols = starmap(adjust_slice, zip(sub, self.size))
+                rows, cols = map(adjust_slice, sub, self.size)
                 return type(self)(row[cols] for row in self.__array[rows])
 
             else:
@@ -171,7 +169,7 @@ class Matrix:
                     raise ValueError("start, stop or step of a slice must be > 0."
                                     " Make sure `start <= stop` if both are specified.")
 
-                rows, cols = starmap(adjust_slice, zip(sub, self.size))
+                rows, cols = map(adjust_slice, sub, self.size)
 
                 if isinstance(value, __class__):
                     array = value.__array
@@ -196,6 +194,38 @@ class Matrix:
             raise TypeError(
                 "Subscript element must be a tuple of integers or slices\n"
                 "\t(with or without parenthesis).") from None
+
+
+    def __iter__(self):
+        """
+        Returns a generator that yields the *elements* of the matrix.
+
+        With the "advanced" form, the generator can be set
+        to any vaild row and column of the matrix
+        from which to continue iteration using the send() method.
+        NOTE: Recall that the matrix is *1-indexed* when using the send method.
+        """
+
+        # Simple
+        # for row in self.__array:
+        #     yield from row
+
+        # Advanced
+        r = 0
+        while r < self.__nrow:
+            c = 0
+            row = self.__array[r]
+            while c < self.__ncol:
+                if r_c := (yield row[c]):
+                    if isinstance(r_c, tuple) and len(r_c) == 2:
+                        r, c = r_c[0] - 1, r_c[1] - 2
+                        row = self.__array[r]
+                    elif isinstance(r_c, int):
+                        r = r_c - 2
+                        break
+                c += 1
+            r += 1
+
 
     # Properties
 
