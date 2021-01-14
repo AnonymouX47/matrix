@@ -226,6 +226,18 @@ class Matrix:
                 c += 1
             r += 1
 
+    def __contains__(self, item):
+        """
+        Returns `True` if 'item' is an element in the matrix, otherwise `False`.
+
+        'item' must be an integer.
+        """
+        
+        if not isinstance(item, int):
+            raise TypeError("Matrix elements are only integers.")
+
+        return any(item in row for row in self.__array)
+
 
     # Properties
 
