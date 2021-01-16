@@ -320,7 +320,7 @@ class Rows:
         self.__matrix = matrix
 
     def __iter__(self):
-        return (row.copy() for row in self.__matrix._array)
+        return map(tuple, self.__matrix._array)
 
 
 class Columns:
@@ -332,6 +332,5 @@ class Columns:
         self.__matrix = matrix
 
     def __iter__(self):
-        return ([row[col] for row in self.__matrix._array]
-                for col in range(self.__matrix.ncol))
+        return zip(*self.__matrix._array)
 
