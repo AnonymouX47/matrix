@@ -106,7 +106,7 @@ class Matrix:
           e.g `matrix[::2, 3:4]`
           - the first slice selects rows.
           - the second slice selects columns.
-          - slices out of range are "forgiven".
+          - any 'stop' out of range is "forgiven".
           - Negative indices or steps are not allowed.
 
         NOTE:
@@ -125,9 +125,11 @@ class Matrix:
                                     " either out of range or less than 1.")
 
             elif all(isinstance(x, slice) for x in sub):
-                if not all(map(valid_slice, sub)):
+                if (not all(map(valid_slice, sub))
+                or any(None is not s.start > end for s, end in zip(sub, self.size))):
                     raise ValueError("start, stop or step of a slice must be > 0."
-                                    " Make sure `start <= stop` if both are specified.")
+                "Also Make sure `start <= stop` if both are specified"
+                " and that start is less than number of rows/columns as applicable.")
 
                 rows, cols = map(adjust_slice, sub, self.size)
                 return type(self)(row[cols] for row in self.__array[rows])
@@ -165,9 +167,11 @@ class Matrix:
                                     " either out of range or less than 1.")
 
             elif all(isinstance(x, slice) for x in sub):
-                if not all(map(valid_slice, sub)):
-                    raise ValueError("start, stop or step of a slice must be > 0."
-                                    " Make sure `start <= stop` if both are specified.")
+                if (not all(map(valid_slice, sub))
+                or any(None is not s.start > end for s, end in zip(sub, self.size))):
+                    raise ValueError("start, stop or step of a slice must be > 0.\n"
+                "Also Make sure `start <= stop` if both are specified"
+                " and that start is less than number of rows/columns as applicable.")
 
                 rows, cols = map(adjust_slice, sub, self.size)
 
@@ -295,6 +299,9 @@ class Matrix:
         # Number of columns
         if ncol:  # 'ncol' can only be either None or a +ve integer at this point.
             if pad_rows:
+                if any(len(row) > ncol for row in self.__array):
+                    raise ValueError("Specified number of columns is"
+                                        " less than length of longest row.")
                 for row in self.__array: row.extend([0] * (ncol - len(row)))
                 self.__ncol = ncol
                 return
@@ -319,6 +326,31 @@ class Rows:
     def __init__(self, matrix):
         self.__matrix = matrix
 
+    def __getitem__(self, sub):
+        """
+        Returns:
+        - the ith row, if subscript is an integer, i.
+        - rows selected by the slice, if subscript is a slice.
+
+        NOTE: Still 1-indexed and slice.stop is included.
+        """
+
+        if isinstance(sub, int):
+            if 0 < sub <= self.__matrix.nrow:
+                return self.__matrix._array[sub-1]
+            raise ValueError("Index either not +ve or out of range.")
+        elif isinstance(sub, slice):
+            if (valid_slice(sub)
+                and (sub.start or self.__matrix.nrow) <= self.__matrix.nrow):
+                sub = adjust_slice(sub, self.__matrix.nrow)
+                return tuple(map(tuple, self.__matrix._array[sub]))
+
+            raise ValueError("start, stop or step of a slice must be > 0."
+                "Also Make sure `start <= stop` if both are specified"
+                " and that start is less than number of rows/columns as applicable.")
+
+        raise TypeError("Subsript must either be an integer or a slice.")
+
     def __iter__(self):
         return map(tuple, self.__matrix._array)
 
@@ -330,6 +362,34 @@ class Columns:
 
     def __init__(self, matrix):
         self.__matrix = matrix
+
+    def __getitem__(self, sub):
+        """
+        Returns:
+        - the ith row, if subscript is an integer, i.
+        - rows selected by the slice, if subscript is a slice.
+
+        NOTE: Still 1-indexed and slice.stop is included.
+        """
+
+        if isinstance(sub, int):
+            if 0 < sub <= self.__matrix.ncol:
+                sub -= 1
+                return tuple([row[sub] for row in self.__matrix._array])
+            raise ValueError("Index either not +ve or out of range.")
+
+        elif isinstance(sub, slice):
+            if (valid_slice(sub)
+                and (sub.start or self.__matrix.ncol) <= self.__matrix.ncol):
+                sub = adjust_slice(sub, self.__matrix.ncol)
+                return tuple([tuple([row[col] for row in self.__matrix._array])
+                            for col in range(*sub.indices(self.__matrix.ncol))])
+
+            raise ValueError("start, stop or step of a slice must be > 0."
+                "Also Make sure `start <= stop` if both are specified"
+                " and that start is less than number of rows/columns as applicable.")
+
+        raise TypeError("Subsript must either be an integer or a slice.")
 
     def __iter__(self):
         return zip(*self.__matrix._array)
