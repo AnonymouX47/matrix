@@ -13,6 +13,7 @@ class Matrix:
 
     A matrix can be constructed in two ways:
     - Given two positive integers, it's initialized as a zero matrix of that dimension.
+      - Signature: `Matrix(rows: int, cols: int)`
       e.g
 
       >>> print(Matrix(2, 2))
@@ -23,6 +24,8 @@ class Matrix:
       —————————
 
     - Given a 2-D iterable of integers:
+      - Signature: `Matrix(array: iterable, zfill: bool = False)`
+
       - If all rows have the same length, initialized as if the array is row-major.
       - If row lengths don't match but `zfill is True`, zero-fill to the right to match.
     """
@@ -33,15 +36,7 @@ class Matrix:
     # Implicit Operations
 
     def __init__(self, rows_array=None, cols_zfill=None):
-        """
-        Two signatures:
-
-        class Matrix(rows: int, cols: int)
-
-        OR
-
-        class Matrix(array: iterable, zfill: bool = False)
-        """
+        """See class Description."""
 
         if isinstance(rows_array, int) and isinstance(cols_zfill, int):
             rows, cols = rows_array, cols_zfill
@@ -121,8 +116,7 @@ class Matrix:
                 if 0 < row <= self.__nrow and 0 < col <= self.__ncol:
                     return self.__array[row - 1][col - 1]
                 else:
-                    raise IndexError("Row and/or Column index is/are"
-                                    " either out of range or less than 1.")
+                    raise IndexError("Row and/or Column index is/are out of range.")
 
             elif all(isinstance(x, slice) for x in sub):
                 if (not all(map(valid_slice, sub))
@@ -163,8 +157,7 @@ class Matrix:
                         raise TypeError("Matrix elements can only be integers,"
                                         f" not {type(value)}() objects.")
                 else:
-                    raise IndexError("Row and/or Column index is/are"
-                                    " either out of range or less than 1.")
+                    raise IndexError("Row and/or Column index is/are out of range.")
 
             elif all(isinstance(x, slice) for x in sub):
                 if (not all(map(valid_slice, sub))
@@ -323,7 +316,11 @@ class Rows:
     Implements direct row read/write operations.
     """
 
+    __slots__ = ("__matrix",)
+
     def __init__(self, matrix):
+        """See class Description."""
+
         self.__matrix = matrix
 
     def __getitem__(self, sub):
@@ -338,7 +335,7 @@ class Rows:
         if isinstance(sub, int):
             if 0 < sub <= self.__matrix.nrow:
                 return self.__matrix._array[sub-1]
-            raise ValueError("Index either not +ve or out of range.")
+            raise IndexError("Index out of range.")
         elif isinstance(sub, slice):
             if (valid_slice(sub)
                 and (sub.start or self.__matrix.nrow) <= self.__matrix.nrow):
@@ -349,7 +346,35 @@ class Rows:
                 "Also Make sure `start <= stop` if both are specified"
                 " and that start is less than number of rows/columns as applicable.")
 
-        raise TypeError("Subsript must either be an integer or a slice.")
+        raise TypeError("Subscript must either be an integer or a slice.")
+
+    def __setitem__(self, sub, value):
+        """
+        Sets the elements in the row specifed by 'sub'
+        to the items of the iterable 'value'.
+
+        sub: can only be an integer.
+        value: an iterable of integers.
+          - whose length must be equal to that of the row.
+          - i.e `len(value) == matrix.ncol`.
+        """
+
+        if not isinstance(sub, int):
+            raise TypeError("Subscript for row assigment must be an integer.")
+
+        if 0 < sub <= self.__matrix.nrow:
+            try:
+                array = tuple(value)
+            except TypeError:
+                raise TypeError("The assigned object must be iterable.") from None
+            if not all((isinstance(x, int) for x in value)):
+                raise TypeError("The object must be an iterable of integers.")
+            if len(array) != self.__matrix.ncol:
+                raise ValueError("The iterable is of an inappropriate length.")
+
+            self.__matrix._array[sub-1][:] = array[:]
+        else:
+            raise IndexError("Index out of range.")
 
     def __iter__(self):
         return map(tuple, self.__matrix._array)
@@ -360,14 +385,18 @@ class Columns:
     Implements direct column read/write operations.
     """
 
+    __slots__ = ("__matrix",)
+
     def __init__(self, matrix):
+        """See class Description."""
+
         self.__matrix = matrix
 
     def __getitem__(self, sub):
         """
         Returns:
-        - the ith row, if subscript is an integer, i.
-        - rows selected by the slice, if subscript is a slice.
+        - the ith column, if subscript is an integer, i.
+        - columns selected by the slice, if subscript is a slice.
 
         NOTE: Still 1-indexed and slice.stop is included.
         """
@@ -376,7 +405,7 @@ class Columns:
             if 0 < sub <= self.__matrix.ncol:
                 sub -= 1
                 return tuple([row[sub] for row in self.__matrix._array])
-            raise ValueError("Index either not +ve or out of range.")
+            raise IndexError("Index out of range.")
 
         elif isinstance(sub, slice):
             if (valid_slice(sub)
@@ -389,7 +418,36 @@ class Columns:
                 "Also Make sure `start <= stop` if both are specified"
                 " and that start is less than number of rows/columns as applicable.")
 
-        raise TypeError("Subsript must either be an integer or a slice.")
+        raise TypeError("Subscript must either be an integer or a slice.")
+
+    def __setitem__(self, sub, value):
+        """
+        Sets the elements in the column specifed by 'sub'
+        to the items of the iterable 'value'.
+
+        sub: can only be an integer.
+        value: an iterable of integers.
+          - whose length must be equal to that of the column.
+          - i.e `len(value) == matrix.nrow`.
+        """
+
+        if not isinstance(sub, int):
+            raise TypeError("Subscript for column assigment must be an integer.")
+
+        if 0 < sub <= self.__matrix.ncol:
+            try:
+                array = tuple(value)
+            except TypeError:
+                raise TypeError("The assigned object must be iterable.") from None
+            if not all((isinstance(x, int) for x in value)):
+                raise TypeError("The object must be an iterable of integers.")
+            if len(array) != self.__matrix.nrow:
+                raise ValueError("The iterable is of an inappropriate length.")
+
+            for row, element in zip(self.__matrix._array, array):
+                row[sub-1] = element
+        else:
+            raise IndexError("Index out of range.")
 
     def __iter__(self):
         return zip(*self.__matrix._array)

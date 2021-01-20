@@ -33,12 +33,13 @@ def check_iterable(iterable):
     """
 
     try:
-        array = [[int(element) for element in row] for row in iterable]
+        array = [[element for element in row] for row in iterable]
     except TypeError:
-        raise TypeError("The array should be an iterable"
-                        " of iterables of integers.") from None
+        raise TypeError("The array must be an iterable of iterables.") from None
 
     if array:
+        if not all((isinstance(x, int) for row in array for x in row)):
+            raise TypeError("The inner iterables must contain integers only.")
         lengths = [len(row) for row in array]
     else:
         raise TypeError("The given iterable is empty.")
