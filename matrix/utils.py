@@ -1,5 +1,9 @@
 """Definitions of utility classes and functions meant for the main classes."""
 
+from decimal import Decimal
+from numbers import Real
+
+
 def adjust_slice(s: slice, stop: int) -> slice:
     """
     Changes a slice for a 1-indexed sequence to the equivalent 0-index form.
@@ -38,8 +42,8 @@ def check_iterable(iterable):
         raise TypeError("The array must be an iterable of iterables.") from None
 
     if array:
-        if not all((isinstance(x, int) for row in array for x in row)):
-            raise TypeError("The inner iterables must contain integers only.")
+        if not all((isinstance(x, (Decimal, Real)) for row in array for x in row)):
+            raise TypeError("The inner iterables must contain real numbers only.")
         lengths = [len(row) for row in array]
     else:
         raise TypeError("The given iterable is empty.")
@@ -55,4 +59,14 @@ class InitDocMeta(type):
 
         # Set `__init__` method's docstring to that of the class.
         self.__init__.__doc__ = self.__doc__
+
+
+def is_iterable(obj):
+    """Checks if obj is iterable."""
+    try:
+        iter(obj)
+    except TypeError:
+        return False
+
+    return True
 
