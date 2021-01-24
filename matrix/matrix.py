@@ -1,5 +1,8 @@
 """Definitions of the various classes."""
 
+from operator import itemgetter
+
+from .components import *
 from .utils import *
 
 
@@ -9,23 +12,15 @@ class Matrix:
 
     The properties here are used to:
     - ensure the "public" attribute is unwritable.
-    - make sure potential subclasses have a means of access to the "private" attribute."
+    - provide a means of access to the "private" attribute.
 
     A matrix can be constructed in two ways:
-    - Given two positive integers, it's initialized as a zero matrix of that dimension.
-      - Signature: `Matrix(rows: int, cols: int)`
-      e.g
+    - Given two positive integers:
+      `Matrix(rows: int, cols: int)`
+      - initializes as a zero matrix of that dimension.
 
-      >>> print(Matrix(2, 2))
-      —————————
-      | 0 | 0 |
-      —————————
-      | 0 | 0 |
-      —————————
-
-    - Given a 2-D iterable of integers:
-      - Signature: `Matrix(array: iterable, zfill: bool = False)`
-
+    - Given a 2-D iterable of real numbers:
+      `Matrix(array: iterable, zfill: bool = False)`
       - If all rows have the same length, initialized as if the array is row-major.
       - If row lengths don't match but `zfill is True`, zero-fill to the right to match.
     """
@@ -42,28 +37,28 @@ class Matrix:
             rows, cols = rows_array, cols_zfill
 
             if rows > 0 and cols > 0:
-                self.__array = [[0] * cols for _ in range(rows)]
+                self.__array = [[Element(0)] * cols for _ in range(rows)]
                 self.__nrow, self.__ncol = rows, cols
             else:
                 raise ValueError("Both dimensions must be positive integers.")
-        elif hasattr(rows_array, "__iter__") and isinstance(cols_zfill, (type(None), bool)):
+        elif is_iterable(rows_array) and isinstance(cols_zfill, (type(None), bool)):
             minlen, maxlen, self.__nrow, array = check_iterable(rows_array)
 
             if maxlen == 0:
                 raise ValueError("The inner iterables are empty.")
 
             if minlen == maxlen:
-                self.__array = array
+                self.__array = [[to_Element(x) for x in row] for row in array]
                 self.__ncol = maxlen
             elif cols_zfill:
-                self.__array = array
+                self.__array = [[to_Element(x) for x in row] for row in array]
                 self.resize(ncol=maxlen, pad_rows=True)
             else:
                 raise ValueError("'zfill' should be `True`"
                                 " when the array has variable row lengths.")
         else:
             raise TypeError("Constructor arguments must either be two positive integers"
-                            " OR a 2D iterable of integers and an optional boolean.")
+                            " OR a 2D iterable of real numbers and an optional boolean.")
 
         self.__rows = Rows(self)
         self.__columns = Columns(self)
@@ -74,19 +69,25 @@ class Matrix:
 
     def __str__(self):
         """
-        Number with longest str() in a column determines that column's width.
-        The longest number must either be the most +ve or most -ve.
+        Element with longest str() in a column determines that column's width.
         """
 
-        column_widths = [max(map(len, map(str, (min(column), max(column)))))
-                        for column in self.__columns]
-        width_fmt = [f"^{width}" for width in column_widths]
+        # Format each element
+        rows_strs = [["%.4g" % element for element in row] for row in self.__array]
+
+        # Get lengths of longest formatted strings in each column
+        column_widths = [max(map(len, map(itemgetter(i), rows_strs)))
+                        for i in range(self.__ncol)]
+
+        # Generate the format_spec for each column
+        # specifying the width (plus a padding of 2) and center-align
+        fmt_strs = ["^%d" % (width + 2) for width in column_widths]
 
         bar = '\u2015' * (sum(column_widths) + self.__ncol * 3  + 1)
 
         return (bar
-            + ('\n' + bar).join('\n| ' + ' | '.join(map(format, row, width_fmt)) + ' |'
-                                for row in self.__array)
+            + ('\n' + bar).join('\n|' + '|'.join(map(format, row, fmt_strs)) + '|'
+                                for row in rows_strs)
             + '\n' + bar)
 
 
@@ -125,8 +126,8 @@ class Matrix:
                 "Also Make sure `start <= stop` if both are specified"
                 " and that start is less than number of rows/columns as applicable.")
 
-                rows, cols = map(adjust_slice, sub, self.size)
-                return type(self)(row[cols] for row in self.__array[rows])
+                row_slice, col_slice = map(adjust_slice, sub, self.size)
+                return type(self)(row[col_slice] for row in self.__array[row_slice])
 
             else:
                 raise TypeError(
@@ -142,7 +143,7 @@ class Matrix:
 
         'value' must be:
         - an integer, if 'sub' references an element.
-        - a Matrix instance or 2D array of integers with appropriate dimensions,
+        - a Matrix instance or 2D array of real numbers with appropriate dimensions,
           if 'sub' references a "block-slice".
         """
 
@@ -151,11 +152,11 @@ class Matrix:
             if all(isinstance(x, int) for x in sub):
                 row, col = sub
                 if 0 < row <= self.__nrow and 0 < col <= self.__ncol:
-                    if isinstance(value, int):
-                        self.__array[row - 1][col - 1] = value
+                    if isinstance(value, (Decimal, Real)):
+                        self.__array[row - 1][col - 1] = to_Element(value)
                     else:
-                        raise TypeError("Matrix elements can only be integers,"
-                                        f" not {type(value)}() objects.")
+                        raise TypeError("Matrix elements can only be real numbers,"
+                                f" not {type(value).__name__!r} objects.")
                 else:
                     raise IndexError("Row and/or Column index is/are out of range.")
 
@@ -166,27 +167,27 @@ class Matrix:
                 "Also Make sure `start <= stop` if both are specified"
                 " and that start is less than number of rows/columns as applicable.")
 
-                rows, cols = map(adjust_slice, sub, self.size)
+                row_slice, col_slice = map(adjust_slice, sub, self.size)
 
                 if isinstance(value, __class__):
                     array = value.__array
-                    checks = (value.__ncol == cols.stop - cols.start
-                              and value.__nrow == rows.stop - rows.start)
+                    checks = (value.__ncol == col_slice.stop - col_slice.start
+                              and value.__nrow == row_slice.stop - row_slice.start)
                 else:
                     minlen, maxlen, nrow, array = check_iterable(value)
                     checks = (minlen == maxlen
-                              and maxlen == cols.stop - cols.start
-                              and nrow == rows.stop - rows.start)
+                              and maxlen == col_slice.stop - col_slice.start
+                              and nrow == row_slice.stop - row_slice.start)
 
                 if checks:
-                    for row, _slice in zip(self.__array[rows], array):
-                        row[cols] = _slice
+                    for row, _slice in zip(self.__array[row_slice], array):
+                        row[col_slice] = [to_Element(x) for x in _slice]
                 else:
                     raise ValueError("The array is not of an appropriate dimension"
                                      " for the given block-slice.")
             else:
                 raise TypeError(
-                        "Matrixes only support subscription of elements or submatrices.")
+                    "Matrixes only support subscription of elements or submatrices.")
         else:
             raise TypeError(
                 "Subscript element must be a tuple of integers or slices\n"
@@ -230,8 +231,8 @@ class Matrix:
         'item' must be an integer.
         """
         
-        if not isinstance(item, int):
-            raise TypeError("Matrix elements are only integers.")
+        if not isinstance(item, (Decimal, Real)):
+            raise TypeError("Matrix elements are only real numbers.")
 
         return any(item in row for row in self.__array)
 
@@ -283,7 +284,7 @@ class Matrix:
         if nrow:  # 'nrow' can only be either None or a +ve integer at this point.
             diff = nrow - self.__nrow
             if diff > 0:
-                self.__array.extend([[0] * self.__ncol] * diff)
+                self.__array.extend([[Element(0)] * self.__ncol] * diff)
             elif diff < 0:
                 # Delete the last `-diff` rows (**in-place**).
                 self.__array[:] = self.__array[:diff]
@@ -295,13 +296,13 @@ class Matrix:
                 if any(len(row) > ncol for row in self.__array):
                     raise ValueError("Specified number of columns is"
                                         " less than length of longest row.")
-                for row in self.__array: row.extend([0] * (ncol - len(row)))
+                for row in self.__array: row.extend([Element(0)] * (ncol - len(row)))
                 self.__ncol = ncol
                 return
 
             diff = ncol - self.__ncol
             if diff > 0:
-                for row in self.__array: row.extend([0] * diff)
+                for row in self.__array: row.extend([Element(0)] * diff)
             elif diff < 0:
                 # Delete the last `-diff` elements in each row (**in-place**).
                 for row in self.__array: row[:] = row[:diff]
@@ -354,7 +355,7 @@ class Rows:
         to the items of the iterable 'value'.
 
         sub: can only be an integer.
-        value: an iterable of integers.
+        value: an iterable of real numbers.
           - whose length must be equal to that of the row.
           - i.e `len(value) == matrix.ncol`.
         """
@@ -367,12 +368,12 @@ class Rows:
                 array = tuple(value)
             except TypeError:
                 raise TypeError("The assigned object must be iterable.") from None
-            if not all((isinstance(x, int) for x in value)):
-                raise TypeError("The object must be an iterable of integers.")
+            if not all((isinstance(x, (Decimal, Real)) for x in value)):
+                raise TypeError("The object must be an iterable of real numbers.")
             if len(array) != self.__matrix.ncol:
-                raise ValueError("The iterable is of an inappropriate length.")
+                raise ValueError("The iterable is not of an appropriate length.")
 
-            self.__matrix._array[sub-1][:] = array[:]
+            self.__matrix._array[sub-1][:] = [to_Element(x) for x in array]
         else:
             raise IndexError("Index out of range.")
 
@@ -426,7 +427,7 @@ class Columns:
         to the items of the iterable 'value'.
 
         sub: can only be an integer.
-        value: an iterable of integers.
+        value: an iterable of real numbers.
           - whose length must be equal to that of the column.
           - i.e `len(value) == matrix.nrow`.
         """
@@ -439,13 +440,13 @@ class Columns:
                 array = tuple(value)
             except TypeError:
                 raise TypeError("The assigned object must be iterable.") from None
-            if not all((isinstance(x, int) for x in value)):
-                raise TypeError("The object must be an iterable of integers.")
+            if not all((isinstance(x, (Decimal, Real)) for x in value)):
+                raise TypeError("The object must be an iterable of real numbers.")
             if len(array) != self.__matrix.nrow:
-                raise ValueError("The iterable is of an inappropriate length.")
+                raise ValueError("The iterable is not of an appropriate length.")
 
             for row, element in zip(self.__matrix._array, array):
-                row[sub-1] = element
+                row[sub-1] = to_Element(element)
         else:
             raise IndexError("Index out of range.")
 
