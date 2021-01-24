@@ -3,6 +3,8 @@
 from decimal import Decimal
 from numbers import Real
 
+from .components import to_Element
+
 
 def adjust_slice(s: slice, stop: int) -> slice:
     """
@@ -27,7 +29,7 @@ def valid_slice(s: slice):
 
 def check_iterable(iterable):
     """
-    Checks if `iterable` represents a two dimensional array of integers.
+    Checks if `iterable` represents a two dimensional array of real numbers.
 
     If so, returns the
     - shortest row lenght,
@@ -48,7 +50,8 @@ def check_iterable(iterable):
     else:
         raise TypeError("The given iterable is empty.")
 
-    return min(lengths), max(lengths), len(array), array
+    return (min(lengths), max(lengths), len(array),
+            [[to_Element(x) for x in row] for row in array])
 
 
 class InitDocMeta(type):

@@ -48,10 +48,10 @@ class Matrix:
                 raise ValueError("The inner iterables are empty.")
 
             if minlen == maxlen:
-                self.__array = [[to_Element(x) for x in row] for row in array]
+                self.__array = array
                 self.__ncol = maxlen
             elif cols_zfill:
-                self.__array = [[to_Element(x) for x in row] for row in array]
+                self.__array = array
                 self.resize(ncol=maxlen, pad_rows=True)
             else:
                 raise ValueError("'zfill' should be `True`"
@@ -180,8 +180,8 @@ class Matrix:
                               and nrow == row_slice.stop - row_slice.start)
 
                 if checks:
-                    for row, _slice in zip(self.__array[row_slice], array):
-                        row[col_slice] = [to_Element(x) for x in _slice]
+                    for row, _row in zip(self.__array[row_slice], array):
+                        row[col_slice] = _row
                 else:
                     raise ValueError("The array is not of an appropriate dimension"
                                      " for the given block-slice.")

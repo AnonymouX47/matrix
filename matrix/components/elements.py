@@ -7,7 +7,7 @@ Implemented and used this type because:
 - It has better floating-point support than `float`, with extended precision.
 """
 
-from ..utils import Decimal
+from decimal import Decimal
 
 __all__ = ["Element", "to_Element"]
 
