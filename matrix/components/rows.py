@@ -20,6 +20,9 @@ class Rows:
 
         self.__matrix = matrix
 
+    def __repr__(self):
+        return f"<Rows of {self.__matrix!r} at {id(self):#x}>"
+
     def __getitem__(self, sub):
         """
         Returns:

@@ -66,7 +66,7 @@ class Matrix:
 
 
     def __repr__(self):
-        return "{}({}, {})".format(type(self).__name__, self.__nrow, self.__ncol)
+        return f"<{type(self).__name__}{self.size} at {id(self):#x}>"
 
     def __str__(self):
         """
