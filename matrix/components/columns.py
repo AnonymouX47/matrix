@@ -1,8 +1,10 @@
 """Definitions pertaining to the rows of a matrix."""
 
 from decimal import Decimal
+from math import ceil
 from numbers import Real
 
+from ..utils import adjust_slice
 from .elements import to_Element
 
 __all__ = ("Columns",)
@@ -24,8 +26,8 @@ class Columns:
 
     def __getitem__(self, sub):
         """
-        Returns:
-        - the ith column, if subscript is an integer, i.
+        Returns the:
+        - ith column, if subscript is an integer, i.
         - columns selected by the slice, if subscript is a slice.
 
         NOTE: Still 1-indexed and slice.stop is included.
@@ -38,15 +40,9 @@ class Columns:
             raise IndexError("Index out of range.")
 
         elif isinstance(sub, slice):
-            if (valid_slice(sub)
-                and (sub.start or self.__matrix.ncol) <= self.__matrix.ncol):
-                sub = adjust_slice(sub, self.__matrix.ncol)
-                return tuple([tuple([row[col] for row in self.__matrix._array])
-                            for col in range(*sub.indices(self.__matrix.ncol))])
-
-            raise ValueError("start, stop or step of a slice must be > 0."
-                "Also Make sure `start <= stop` if both are specified"
-                " and that start is less than number of rows/columns as applicable.")
+            sub = adjust_slice(sub, self.__matrix.ncol)
+            return tuple([tuple([row[col] for row in self.__matrix._array])
+                        for col in range(*sub.indices(self.__matrix.ncol))])
 
         raise TypeError("Subscript must either be an integer or a slice.")
 
@@ -78,6 +74,36 @@ class Columns:
                 row[sub-1] = to_Element(element)
         else:
             raise IndexError("Index out of range.")
+
+    def __delitem__(self, sub):
+        """
+        Deletes the:
+        - ith column, if subscript is an integer, i.
+        - columns selected by the slice, if subscript is a slice.
+
+        NOTE:
+        - Still 1-indexed and slice.stop is included.
+        - Deleting all columns isn't allowed.
+        """
+
+        if isinstance(sub, int):
+            if 0 < sub <= self.__matrix.ncol:
+                sub -= 1
+                for row in self.__matrix._array:
+                    del row[sub]
+                self.__matrix._Matrix__ncol -= 1
+            else:
+                raise IndexError("Index out of range.")
+
+        elif isinstance(sub, slice):
+            sub = adjust_slice(sub, self.__matrix.ncol)
+            if (diff := ceil((sub.stop-sub.start) / sub.step)) == self.__matrix.ncol:
+                raise ValueError("Emptying the matrix isn't allowed.")
+            for row in self.__matrix._array:
+                del row[sub]
+            self.__matrix._Matrix__ncol -= diff
+        else:
+            raise TypeError("Subscript must either be an integer or a slice.")
 
     def __iter__(self):
         return zip(*self.__matrix._array)

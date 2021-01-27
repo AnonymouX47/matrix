@@ -121,12 +121,6 @@ class Matrix:
                     raise IndexError("Row and/or Column index is/are out of range.")
 
             elif all(isinstance(x, slice) for x in sub):
-                if (not all(map(valid_slice, sub))
-                or any(None is not s.start > end for s, end in zip(sub, self.size))):
-                    raise ValueError("start, stop or step of a slice must be > 0."
-                "Also Make sure `start <= stop` if both are specified"
-                " and that start is less than number of rows/columns as applicable.")
-
                 row_slice, col_slice = map(adjust_slice, sub, self.size)
                 return type(self)(row[col_slice] for row in self.__array[row_slice])
 
@@ -162,12 +156,6 @@ class Matrix:
                     raise IndexError("Row and/or Column index is/are out of range.")
 
             elif all(isinstance(x, slice) for x in sub):
-                if (not all(map(valid_slice, sub))
-                or any(None is not s.start > end for s, end in zip(sub, self.size))):
-                    raise ValueError("start, stop or step of a slice must be > 0.\n"
-                "Also Make sure `start <= stop` if both are specified"
-                " and that start is less than number of rows/columns as applicable.")
-
                 row_slice, col_slice = map(adjust_slice, sub, self.size)
 
                 if isinstance(value, __class__):

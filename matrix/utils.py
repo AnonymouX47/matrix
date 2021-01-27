@@ -5,26 +5,36 @@ from numbers import Real
 
 from .components import to_Element
 
+def display_slice(s: slice):
+    """Returns a colon-separated string representation of a slice."""
 
-def adjust_slice(s: slice, stop: int) -> slice:
+    # `or` can't be used in case the attribute is 0.
+    return "{}:{}{}".format(*(x if x is not None else '' for x in (s.start, s.stop)),
+                            f":{s.step}" if s.step is not None else '')
+
+def adjust_slice(s: slice, length: int) -> slice:
     """
     Changes a slice for a 1-indexed sequence to the equivalent 0-index form.
 
     'stop' is the length of the sequence for which the slice is being adjusted.
     """
 
-    s = s.indices(stop)
+    if any(None is not x < 1 for x in (s.start, s.stop, s.step)):
+        raise ValueError("%r -> 'start', 'stop' or 'step' is less than 1."
+                        % display_slice(s))
+    if s.stop is None:
+        if None is not s.start > length:
+            raise ValueError("%r -> 'start' of slice is greater than matrix dimension."
+                            % display_slice(s))
+    elif None is not s.start > s.stop:
+        raise ValueError("'start' > 'stop' in slice %r."
+                        % display_slice(s))
+
+    s = s.indices(length)
 
     # Leaves the 'stop' attribute unchanged
     # since matrixes include the (1-indexed) 'stop' index for slicing operations.
     return slice(max(0, s[0]-1), *s[1:])
-
-
-def valid_slice(s: slice):
-    """Returns a boolean indicating if the given slice is valid for a matrix."""
-
-    return (all(x is None or x > 0 for x in (s.start, s.stop, s.step))
-            and (s.stop is None or (s.start or 1) <= s.stop))
 
 
 def check_iterable(iterable):

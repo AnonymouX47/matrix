@@ -1,8 +1,10 @@
 """Definitions pertaining to the rows of a matrix."""
 
 from decimal import Decimal
+from math import ceil
 from numbers import Real
 
+from ..utils import adjust_slice
 from .elements import to_Element
 
 __all__ = ("Rows",)
@@ -25,8 +27,8 @@ class Rows:
 
     def __getitem__(self, sub):
         """
-        Returns:
-        - the ith row, if subscript is an integer, i.
+        Returns the:
+        - ith row, if subscript is an integer, i.
         - rows selected by the slice, if subscript is a slice.
 
         NOTE: Still 1-indexed and slice.stop is included.
@@ -37,14 +39,8 @@ class Rows:
                 return self.__matrix._array[sub-1]
             raise IndexError("Index out of range.")
         elif isinstance(sub, slice):
-            if (valid_slice(sub)
-                and (sub.start or self.__matrix.nrow) <= self.__matrix.nrow):
-                sub = adjust_slice(sub, self.__matrix.nrow)
-                return tuple(map(tuple, self.__matrix._array[sub]))
-
-            raise ValueError("start, stop or step of a slice must be > 0."
-                "Also Make sure `start <= stop` if both are specified"
-                " and that start is less than number of rows/columns as applicable.")
+            sub = adjust_slice(sub, self.__matrix.nrow)
+            return tuple(map(tuple, self.__matrix._array[sub]))
 
         raise TypeError("Subscript must either be an integer or a slice.")
 
@@ -75,6 +71,32 @@ class Rows:
             self.__matrix._array[sub-1][:] = [to_Element(x) for x in array]
         else:
             raise IndexError("Index out of range.")
+
+    def __delitem__(self, sub):
+        """
+        Deletes the:
+        - ith row, if subscript is an integer, i.
+        - rows selected by the slice, if subscript is a slice.
+
+        NOTE:
+        - Still 1-indexed and slice.stop is included.
+        - Deleting all rows isn't allowed.
+        """
+
+        if isinstance(sub, int):
+            if 0 < sub <= self.__matrix.nrow:
+                del self.__matrix._array[sub-1]
+                self.__matrix._Matrix__nrow -= 1
+            else:
+                raise IndexError("Index out of range.")
+        elif isinstance(sub, slice):
+            sub = adjust_slice(sub, self.__matrix.nrow)
+            if (diff := ceil((sub.stop-sub.start) / sub.step)) == self.__matrix.nrow:
+                raise ValueError("Emptying the matrix isn't allowed.")
+            del self.__matrix._array[sub]
+            self.__matrix._Matrix__nrow -= diff
+        else:
+            raise TypeError("Subscript must either be an integer or a slice.")
 
     def __iter__(self):
         return map(tuple, self.__matrix._array)
