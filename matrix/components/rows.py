@@ -1,6 +1,7 @@
 """Definitions pertaining to the rows of a matrix."""
 
 from decimal import Decimal
+from functools import partial
 from math import ceil
 from numbers import Real
 
@@ -92,7 +93,7 @@ class Rows:
             raise TypeError("Subscript must either be an integer or a slice.")
 
     def __iter__(self):
-        return map(tuple, self.__matrix._array)
+        return map(partial(Row, self.__matrix), range(self.__matrix.nrow))
 
 
 class Row:
