@@ -15,6 +15,7 @@ class Rows:
     Implements direct row read/write operations.
     """
 
+    # mainly to disable abitrary atributes.
     __slots__ = ("__matrix",)
 
     def __init__(self, matrix):
@@ -23,7 +24,7 @@ class Rows:
         self.__matrix = matrix
 
     def __repr__(self):
-        return f"<Rows of {self.__matrix!r} at {id(self):#x}>"
+        return f"<Rows of {self.__matrix!r}>"
 
     def __getitem__(self, sub):
         """
@@ -36,7 +37,7 @@ class Rows:
 
         if isinstance(sub, int):
             if 0 < sub <= self.__matrix.nrow:
-                return self.__matrix._array[sub-1]
+                return Row(self.__matrix, sub-1)
             raise IndexError("Index out of range.")
         elif isinstance(sub, slice):
             sub = adjust_slice(sub, self.__matrix.nrow)
@@ -62,7 +63,7 @@ class Rows:
             try:
                 array = tuple(value)
             except TypeError:
-                raise TypeError("The assigned object must be iterable.") from None
+                raise TypeError("The assigned object isn't iterable.") from None
             if not all((isinstance(x, (Decimal, Real)) for x in value)):
                 raise TypeError("The object must be an iterable of real numbers.")
             if len(array) != self.__matrix.ncol:
@@ -100,4 +101,90 @@ class Rows:
 
     def __iter__(self):
         return map(tuple, self.__matrix._array)
+
+
+class Row:
+    """
+    A single row of a matrix.
+
+    'matrix' -> The underlying matrix whose row is being represented.
+    'index' -> The (0-indexed) index of the row the object should represent.
+
+    Instead of returning new lists or tuples as rows, this would:
+    - be more efficient (both time and space).
+      - prevents copying element references.
+    - have direct access to the underlying matrix data.
+    """
+
+    # mainly to disable abitrary atributes.
+    __slots__ = ("__matrix", "__index")
+
+    def __init__(self, matrix, index):
+        """See class Description."""
+
+        self.__matrix = matrix
+        self.__index = index
+
+    def __repr__(self):
+        return f"<Row {self.__index + 1} of {self.__matrix!r}>"
+
+    def __str__(self):
+        return f"Row({self.__matrix._array[self.__index]})"
+
+    def __getitem__(self, sub):
+        """
+        Returns:
+        - the ith element of the row, if 'sub' is an integer, i.
+        - a list of the elements selected by the slice, if 'sub' is a slice.
+        """
+
+        if isinstance(sub, int):
+            if 0 < sub <= self.__matrix.nrow:
+                return self.__matrix._array[self.__index][sub-1]
+            raise IndexError("Index out of range.")
+
+        elif isinstance(sub, slice):
+            sub = adjust_slice(sub, self.__matrix.nrow)
+            return self.__matrix._array[self.__index][sub]
+
+        raise TypeError("Subscript must either be an integer or a slice.")
+
+    def __setitem__(self, sub, value):
+        """
+        Sets:
+        - the ith element of the row to 'value', if 'sub' is an integer, i.
+        - the elements selected by the slice to the elements in iterable 'value',
+          if 'sub' is a slice.
+        """
+
+        if isinstance(sub, int):
+            if 0 < sub <= self.__matrix.nrow:
+                if isinstance(value, (Real, Decimal)):
+                    self.__matrix._array[self.__index][sub-1] = to_Element(value)
+                else:
+                    raise TypeError("Matrix elements can only be real numbers.")
+            else:
+                raise IndexError("Index out of range.")
+
+        elif isinstance(sub, slice):
+            sub = adjust_slice(sub, self.__matrix.nrow)
+            try:
+                value = tuple(value)
+            except TypeError:
+                raise TypeError("The assigned object isn't iterable.") from None
+            if not all((isinstance(x, (Decimal, Real)) for x in value)):
+                raise TypeError("The object must be an iterable of real numbers.")
+            if len(value) != ceil((sub.stop-sub.start) / sub.step):
+                raise ValueError("The iterable is not of an appropriate length.")
+
+            self.__matrix._array[self.__index][sub] = [to_Element(x) for x in value]
+
+        else:
+            raise TypeError("Subscript must either be an integer or a slice.")
+
+    def __len__(self):
+        return self.__matrix.ncol
+
+    def __iter__(self):
+        return iter(self.__matrix._array[self.__index])
 

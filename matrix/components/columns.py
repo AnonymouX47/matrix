@@ -14,6 +14,7 @@ class Columns:
     Implements direct column read/write operations.
     """
 
+    # mainly to disable abitrary atributes.
     __slots__ = ("__matrix",)
 
     def __init__(self, matrix):
@@ -22,7 +23,7 @@ class Columns:
         self.__matrix = matrix
 
     def __repr__(self):
-        return f"<Columns of {self.__matrix!r} at {id(self):#x}>"
+        return f"<Columns of {self.__matrix!r}>"
 
     def __getitem__(self, sub):
         """
@@ -64,7 +65,7 @@ class Columns:
             try:
                 array = tuple(value)
             except TypeError:
-                raise TypeError("The assigned object must be iterable.") from None
+                raise TypeError("The assigned object isn't iterable.") from None
             if not all((isinstance(x, (Decimal, Real)) for x in value)):
                 raise TypeError("The object must be an iterable of real numbers.")
             if len(array) != self.__matrix.nrow:
