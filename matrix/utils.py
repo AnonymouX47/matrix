@@ -37,7 +37,7 @@ def adjust_slice(s: slice, length: int) -> slice:
     return slice(max(0, s[0]-1), *s[1:])
 
 
-def check_iterable(iterable):
+def valid_2D_iterable(iterable):
     """
     Checks if `iterable` represents a two dimensional array of real numbers.
 
@@ -45,7 +45,7 @@ def check_iterable(iterable):
     - shortest row lenght,
     - longest row lenght,
     - number of rows,
-    - resulting array as a list.
+    - resulting array as a list of matrix elements.
     """
 
     try:
@@ -62,6 +62,25 @@ def check_iterable(iterable):
 
     return (min(lengths), max(lengths), len(array),
             [[to_Element(x) for x in row] for row in array])
+
+
+def valid_container(iterable, length=None):
+    """
+    Checks if 'iterable' is a valid container of matrix elements, of size 'length'.
+
+    If so, returns a list of matrix elements derived from 'iterable'.
+    """
+
+    try:
+        container = tuple(iterable)
+    except TypeError:
+        raise TypeError("The object isn't iterable.") from None
+    if not all((isinstance(x, (Decimal, Real)) for x in container)):
+        raise TypeError("The object must be an iterable of real numbers.")
+    if None is not length != len(container):
+        raise ValueError("The iterable is not of an appropriate length.")
+
+    return [to_Element(x) for x in container]
 
 
 class InitDocMeta(type):

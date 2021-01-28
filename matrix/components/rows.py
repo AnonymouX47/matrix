@@ -4,7 +4,7 @@ from decimal import Decimal
 from math import ceil
 from numbers import Real
 
-from ..utils import adjust_slice
+from ..utils import adjust_slice, valid_container
 from .elements import to_Element
 
 __all__ = ("Rows",)
@@ -60,16 +60,8 @@ class Rows:
             raise TypeError("Subscript for row assigment must be an integer.")
 
         if 0 < sub <= self.__matrix.nrow:
-            try:
-                array = tuple(value)
-            except TypeError:
-                raise TypeError("The assigned object isn't iterable.") from None
-            if not all((isinstance(x, (Decimal, Real)) for x in value)):
-                raise TypeError("The object must be an iterable of real numbers.")
-            if len(array) != self.__matrix.ncol:
-                raise ValueError("The iterable is not of an appropriate length.")
-
-            self.__matrix._array[sub-1][:] = [to_Element(x) for x in array]
+            value = valid_container(value, self.__matrix.ncol)
+            self.__matrix._array[sub-1][:] = value
         else:
             raise IndexError("Index out of range.")
 
@@ -168,16 +160,8 @@ class Row:
 
         elif isinstance(sub, slice):
             sub = adjust_slice(sub, self.__matrix.nrow)
-            try:
-                value = tuple(value)
-            except TypeError:
-                raise TypeError("The assigned object isn't iterable.") from None
-            if not all((isinstance(x, (Decimal, Real)) for x in value)):
-                raise TypeError("The object must be an iterable of real numbers.")
-            if len(value) != ceil((sub.stop-sub.start) / sub.step):
-                raise ValueError("The iterable is not of an appropriate length.")
-
-            self.__matrix._array[self.__index][sub] = [to_Element(x) for x in value]
+            value = valid_container(value, ceil((sub.stop-sub.start) / sub.step))
+            self.__matrix._array[self.__index][sub] = value
 
         else:
             raise TypeError("Subscript must either be an integer or a slice.")

@@ -20,6 +20,7 @@ class Element(Decimal):
     since `decimal.Decimal` doesn't support operations with floats.
     """
 
+    # mainly to disable abitrary atributes.
     __slots__ = ()
 
     def __repr__(self):

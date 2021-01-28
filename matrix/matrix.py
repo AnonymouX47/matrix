@@ -26,6 +26,7 @@ class Matrix:
       - If row lengths don't match but `zfill is True`, zero-fill to the right to match.
     """
 
+    # mainly to disable abitrary atributes.
     __slots__ = ("__array", "__nrow", "__ncol", "__rows", "__columns")
 
 
@@ -43,7 +44,7 @@ class Matrix:
             else:
                 raise ValueError("Both dimensions must be positive integers.")
         elif is_iterable(rows_array) and isinstance(cols_zfill, (type(None), bool)):
-            minlen, maxlen, self.__nrow, array = check_iterable(rows_array)
+            minlen, maxlen, self.__nrow, array = valid_2D_iterable(rows_array)
 
             if maxlen == 0:
                 raise ValueError("The inner iterables are empty.")
@@ -163,7 +164,7 @@ class Matrix:
                     checks = (value.__ncol == col_slice.stop - col_slice.start
                               and value.__nrow == row_slice.stop - row_slice.start)
                 else:
-                    minlen, maxlen, nrow, array = check_iterable(value)
+                    minlen, maxlen, nrow, array = valid_2D_iterable(value)
                     checks = (minlen == maxlen
                               and maxlen == col_slice.stop - col_slice.start
                               and nrow == row_slice.stop - row_slice.start)
