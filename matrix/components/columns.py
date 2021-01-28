@@ -4,7 +4,7 @@ from decimal import Decimal
 from math import ceil
 from numbers import Real
 
-from ..utils import adjust_slice
+from ..utils import adjust_slice, valid_container
 from .elements import to_Element
 
 __all__ = ("Columns",)
@@ -36,8 +36,7 @@ class Columns:
 
         if isinstance(sub, int):
             if 0 < sub <= self.__matrix.ncol:
-                sub -= 1
-                return tuple([row[sub] for row in self.__matrix._array])
+                return Column(self.__matrix, sub-1)
             raise IndexError("Index out of range.")
 
         elif isinstance(sub, slice):
@@ -62,16 +61,8 @@ class Columns:
             raise TypeError("Subscript for column assigment must be an integer.")
 
         if 0 < sub <= self.__matrix.ncol:
-            try:
-                array = tuple(value)
-            except TypeError:
-                raise TypeError("The assigned object isn't iterable.") from None
-            if not all((isinstance(x, (Decimal, Real)) for x in value)):
-                raise TypeError("The object must be an iterable of real numbers.")
-            if len(array) != self.__matrix.nrow:
-                raise ValueError("The iterable is not of an appropriate length.")
-
-            for row, element in zip(self.__matrix._array, array):
+            value = valid_container(value, self.__matrix.nrow)
+            for row, element in zip(self.__matrix._array, value):
                 row[sub-1] = to_Element(element)
         else:
             raise IndexError("Index out of range.")
@@ -108,4 +99,84 @@ class Columns:
 
     def __iter__(self):
         return zip(*self.__matrix._array)
+
+
+class Column:
+    """
+    A single column of a matrix.
+
+    'matrix' -> The underlying matrix whose column is being represented.
+    'index' -> The (0-indexed) index of the column the object should represent.
+
+    Instead of returning new lists or tuples as columns, this would:
+    - be more efficient (both time and space).
+      - prevents copying element references.
+    - have direct access to the underlying matrix data.
+    """
+
+    # mainly to disable abitrary atributes.
+    __slots__ = ("__matrix", "__index")
+
+    def __init__(self, matrix, index):
+        """See class Description."""
+
+        self.__matrix = matrix
+        self.__index = index
+
+    def __repr__(self):
+        return f"<Column {self.__index + 1} of {self.__matrix!r}>"
+
+    def __str__(self):
+        return f"Column({[row[self.__index] for row in self.__matrix._array]})"
+
+    def __getitem__(self, sub):
+        """
+        Returns:
+        - the ith element of the column, if 'sub' is an integer, i.
+        - a list of the elements selected by the slice, if 'sub' is a slice.
+        """
+
+        if isinstance(sub, int):
+            if 0 < sub <= self.__matrix.nrow:
+                return self.__matrix._array[sub-1][self.__index]
+            raise IndexError("Index out of range.")
+
+        elif isinstance(sub, slice):
+            sub = adjust_slice(sub, self.__matrix.nrow)
+            return [row[self.__index] for row in self.__matrix._array[sub]]
+
+        raise TypeError("Subscript must either be an integer or a slice.")
+
+    def __setitem__(self, sub, value):
+        """
+        Sets:
+        - the ith element of the column to 'value', if 'sub' is an integer, i.
+        - the elements selected by the slice to the elements in iterable 'value',
+          if 'sub' is a slice.
+        """
+
+        if isinstance(sub, int):
+            if 0 < sub <= self.__matrix.nrow:
+                if isinstance(value, (Real, Decimal)):
+                    self.__matrix._array[sub-1][self.__index] = to_Element(value)
+                else:
+                    raise TypeError("Matrix elements can only be real numbers.")
+            else:
+                raise IndexError("Index out of range.")
+
+        elif isinstance(sub, slice):
+            sub = adjust_slice(sub, self.__matrix.nrow)
+            value = valid_container(value, ceil((sub.stop-sub.start) / sub.step))
+            for row, element in zip(self.__matrix._array[sub], value):
+                row[self.__index] = element
+
+        else:
+            raise TypeError("Subscript must either be an integer or a slice.")
+
+    def __len__(self):
+        return self.__matrix.nrow
+
+    def __iter__(self):
+        for row in self.__matrix._array:
+            yield row[self.__index]
 

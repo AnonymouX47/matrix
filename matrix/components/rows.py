@@ -131,12 +131,12 @@ class Row:
         """
 
         if isinstance(sub, int):
-            if 0 < sub <= self.__matrix.nrow:
+            if 0 < sub <= self.__matrix.ncol:
                 return self.__matrix._array[self.__index][sub-1]
             raise IndexError("Index out of range.")
 
         elif isinstance(sub, slice):
-            sub = adjust_slice(sub, self.__matrix.nrow)
+            sub = adjust_slice(sub, self.__matrix.ncol)
             return self.__matrix._array[self.__index][sub]
 
         raise TypeError("Subscript must either be an integer or a slice.")
@@ -150,7 +150,7 @@ class Row:
         """
 
         if isinstance(sub, int):
-            if 0 < sub <= self.__matrix.nrow:
+            if 0 < sub <= self.__matrix.ncol:
                 if isinstance(value, (Real, Decimal)):
                     self.__matrix._array[self.__index][sub-1] = to_Element(value)
                 else:
@@ -159,7 +159,7 @@ class Row:
                 raise IndexError("Index out of range.")
 
         elif isinstance(sub, slice):
-            sub = adjust_slice(sub, self.__matrix.nrow)
+            sub = adjust_slice(sub, self.__matrix.ncol)
             value = valid_container(value, ceil((sub.stop-sub.start) / sub.step))
             self.__matrix._array[self.__index][sub] = value
 
