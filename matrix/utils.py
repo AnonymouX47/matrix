@@ -136,7 +136,6 @@ def mangled_attr(*, _get=True, _set=True, _del=True):
     Enables other classes to get, set and delete attributes with **mangled names**,
     defined in decorated classes this class, using the unmangled name.
 
-    - This class must be the **first class** in it's baseclass list.
     - Only works if the attribute is referenced within a class definition.
     - Works recursively for classes decorated with this function i.e
       - if class A is decorated by this function, and

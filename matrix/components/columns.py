@@ -94,22 +94,11 @@ class Columns(RowsCols):
         return map(partial(Column, self.__matrix), range(self.__matrix.ncol))
 
 
-class ColumnsSlice:
+class ColumnsSlice(RowsColumnsSlice):
     """A (pseudo-container) view over a slice of the colums of a matrix."""
 
     # mainly to disable abitrary atributes.
-    __slots__ = ("__matrix", "__slice", "__slice_disp", "__length")
-
-    def __init__(self, matrix, slice_):
-        """See class Description."""
-
-        self.__matrix = matrix
-        self.__slice = slice_
-        self.__slice_disp = display_adj_slice(slice_)
-        self.__length = slice_length(slice_)
-
-    def __repr__(self):
-        return f"<Columns [{self.__slice_disp}] of {self.__matrix!r}>"
+    __slots__ = ()
 
     def __getitem__(self, sub):
         """
@@ -131,15 +120,12 @@ class ColumnsSlice:
 
         raise TypeError("Subscript must either be an integer or a slice.")
 
-    def __len__(self):
-        return self.__length
-
     def __iter__(self):
         return map(partial(Column, self.__matrix),
                     range(*self.__slice.indices(self.__slice.stop)))
 
 
-class Column:
+class Column(RowColumn):
     """
     A single column of a matrix.
 
@@ -153,16 +139,7 @@ class Column:
     """
 
     # mainly to disable abitrary atributes.
-    __slots__ = ("__matrix", "__index")
-
-    def __init__(self, matrix, index):
-        """See class Description."""
-
-        self.__matrix = matrix
-        self.__index = index
-
-    def __repr__(self):
-        return f"<Column {self.__index + 1} of {self.__matrix!r}>"
+    __slots__ = ()
 
     def __str__(self):
         return f"Column({[row[self.__index] for row in self.__matrix._array]})"
