@@ -1,6 +1,7 @@
 """Definitions of utility classes and functions meant for the main classes."""
 
 from decimal import Decimal
+from math import ceil
 from numbers import Real
 
 from .components import to_Element
@@ -11,6 +12,11 @@ def display_slice(s: slice):
     # `or` can't be used in case the attribute is 0.
     return "{}:{}{}".format(*(x if x is not None else '' for x in (s.start, s.stop)),
                             f":{s.step}" if s.step is not None else '')
+
+def display_adj_slice(s: slice):
+    """Returns a colon-separated string representation of a slice."""
+
+    return "{}:{}{}".format(s.start + 1, s.stop, f":{s.step}" if s.step > 1 else '')
 
 def adjust_slice(s: slice, length: int) -> slice:
     """
@@ -24,8 +30,8 @@ def adjust_slice(s: slice, length: int) -> slice:
                         % display_slice(s))
     if s.stop is None:
         if None is not s.start > length:
-            raise ValueError("%r -> 'start' of slice is greater than matrix dimension."
-                            % display_slice(s))
+            raise ValueError("%r -> 'start' of slice is out of range (max: %d)."
+                            % (display_slice(s), length))
     elif None is not s.start > s.stop:
         raise ValueError("'start' > 'stop' in slice %r."
                         % display_slice(s))
@@ -35,6 +41,37 @@ def adjust_slice(s: slice, length: int) -> slice:
     # Leaves the 'stop' attribute unchanged
     # since matrixes include the (1-indexed) 'stop' index for slicing operations.
     return slice(max(0, s[0]-1), *s[1:])
+
+
+def slice_length(s: slice):
+    """Returns the number of items selected by an **adjusted** slice."""
+
+    return ceil((s.stop-s.start) / s.step)
+
+
+def slice_index(s: slice, index: int):
+    """
+    's' -> An adjusted slice for a sequence.
+    'index' -> A (0-based) index of the sequence produced by 's'.
+
+    Returns the equivaluent of 'index' for the original sequence sliced by 's'.
+    """
+
+    return s.start + index * s.step
+
+
+def original_slice(s1: slice, s2: slice):
+    """
+    's1' -> An adjusted slice for a sequence.
+    's2' -> An adjusted slice of the sequence produced by 's1'.
+
+    Returns the equivalent of 's2' for the original sequence sliced by 's1'.
+    """
+
+    return slice(slice_index(s1, s2.start),
+                slice_index(s1, s2.stop-1) + 1,
+                s1.step * s2.step
+                )
 
 
 def valid_2D_iterable(iterable):
@@ -81,16 +118,6 @@ def valid_container(iterable, length=None):
         raise ValueError("The iterable is not of an appropriate length.")
 
     return [to_Element(x) for x in container]
-
-
-class InitDocMeta(type):
-    """A metaclass that sets the docstring of it's instances' `__init__` to the class'"""
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        # Set `__init__` method's docstring to that of the class.
-        self.__init__.__doc__ = self.__doc__
 
 
 def is_iterable(obj):

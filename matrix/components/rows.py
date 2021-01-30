@@ -2,19 +2,15 @@
 
 from decimal import Decimal
 from functools import partial
-from math import ceil
 from numbers import Real
 
-from ..utils import adjust_slice, valid_container
+from ..utils import *
 from .elements import to_Element
 
 __all__ = ("Rows",)
 
 class Rows:
-    """
-    A (pseudo-container) view over the rows of a matrix.
-    Implements direct row read/write operations.
-    """
+    """A (pseudo-container) view over the rows of a matrix."""
 
     # mainly to disable abitrary atributes.
     __slots__ = ("__matrix",)
@@ -42,7 +38,7 @@ class Rows:
             raise IndexError("Index out of range.")
         elif isinstance(sub, slice):
             sub = adjust_slice(sub, self.__matrix.nrow)
-            return tuple(map(tuple, self.__matrix._array[sub]))
+            return RowsSlice(self.__matrix, sub)
 
         raise TypeError("Subscript must either be an integer or a slice.")
 
@@ -85,7 +81,7 @@ class Rows:
                 raise IndexError("Index out of range.")
         elif isinstance(sub, slice):
             sub = adjust_slice(sub, self.__matrix.nrow)
-            if (diff := ceil((sub.stop-sub.start) / sub.step)) == self.__matrix.nrow:
+            if (diff := slice_length(sub)) == self.__matrix.nrow:
                 raise ValueError("Emptying the matrix isn't allowed.")
             del self.__matrix._array[sub]
             self.__matrix._Matrix__nrow -= diff
@@ -94,6 +90,51 @@ class Rows:
 
     def __iter__(self):
         return map(partial(Row, self.__matrix), range(self.__matrix.nrow))
+
+
+class RowsSlice:
+    """A (pseudo-container) view over a slice of the rows of a matrix."""
+
+    # mainly to disable abitrary atributes.
+    __slots__ = ("__matrix", "__slice", "__slice_disp", "__length")
+
+    def __init__(self, matrix, slice_):
+        """See class Description."""
+
+        self.__matrix = matrix
+        self.__slice = slice_
+        self.__slice_disp = display_adj_slice(slice_)
+        self.__length = slice_length(slice_)
+
+    def __repr__(self):
+        return f"<Rows [{self.__slice_disp}] of {self.__matrix!r}>"
+
+    def __getitem__(self, sub):
+        """
+        Returns the:
+        - ith row, if subscript is an integer, i.
+        - Rows() instance representing the rows selected by the slice,
+          if subscript is a slice.
+
+        NOTE: Still 1-indexed and slice.stop is included.
+        """
+
+        if isinstance(sub, int):
+            if 0 < sub <= self.__length:
+                return Row(self.__matrix, slice_index(self.__slice, sub-1))
+            raise IndexError("Index out of range.")
+        elif isinstance(sub, slice):
+            sub = adjust_slice(sub, self.__length)
+            return __class__(self.__matrix, original_slice(self.__slice, sub))
+
+        raise TypeError("Subscript must either be an integer or a slice.")
+
+    def __len__(self):
+        return self.__length
+
+    def __iter__(self):
+        return map(partial(Row, self.__matrix),
+                    range(*self.__slice.indices(self.__slice.stop)))
 
 
 class Row:
@@ -161,7 +202,7 @@ class Row:
 
         elif isinstance(sub, slice):
             sub = adjust_slice(sub, self.__matrix.ncol)
-            value = valid_container(value, ceil((sub.stop-sub.start) / sub.step))
+            value = valid_container(value, slice_length(sub))
             self.__matrix._array[self.__index][sub] = value
 
         else:
