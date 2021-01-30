@@ -1,6 +1,7 @@
 """Definitions of utility classes and functions meant for the main classes."""
 
 from decimal import Decimal
+from functools import wraps
 from math import ceil
 from numbers import Real
 
@@ -128,4 +129,63 @@ def is_iterable(obj):
         return False
 
     return True
+
+
+def mangled_attr(*, _get=True, _set=True, _del=True):
+    """
+    Enables other classes to get, set and delete attributes with **mangled names**,
+    defined in decorated classes this class, using the unmangled name.
+
+    - This class must be the **first class** in it's baseclass list.
+    - Only works if the attribute is referenced within a class definition.
+    - Works recursively for classes decorated with this function i.e
+      - if class A is decorated by this function, and
+      - B is a subclass of A and also decorated by this function
+      - then, mangled attributes of both B and A can be directly accessed via
+        an instance of B from within another class definition.
+      - etc...
+
+    The parameters that are true determine which methods will be decorated.
+    Hence, which operations will be affected.
+
+    Returns a class decorator.
+
+    NOTE: The method applied is not perfect and can give unwanted results if:
+    - The name of the class from within which the attribute is referenced
+      has at least 2 underscores in-between.
+    """
+
+    def deco(cls):
+        name = cls.__name__
+        if _get: cls.__getattribute__ = retry_mangled(cls.__getattribute__, name)
+        if _set: cls.__setattr__ = retry_mangled(cls.__setattr__, name)
+        if _del: cls.__delattr__ = retry_mangled(cls.__delattr__, name)
+
+        return cls
+
+    return deco
+
+
+def retry_mangled(get_set_del, cls_name):
+    """
+    Decorates a getter, setter or deleter to retry for mangled names,
+    after "re-mangling" the attribute name with 'cls_name'.
+    """
+
+    @wraps(get_set_del)
+    def wrapper(self, name, *args):
+        # 'args' is only occupied for set operations.
+        try:
+            return get_set_del(self, name, *args)
+        except AttributeError as err:
+            split = name.split('__', 1)
+            if (len(split) == 2 and split[0].startswith('_')):
+                name = "_%s__%s" % (cls_name, split[1])
+                try:
+                    return get_set_del(self, name, *args)
+                except AttributeError:
+                    raise err from None
+            raise
+
+    return wrapper
 

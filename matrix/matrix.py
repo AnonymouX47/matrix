@@ -7,6 +7,7 @@ from .utils import *
 
 __all__ = ("Matrix",)
 
+@mangled_attr(_del=False)
 class Matrix:
     """
     The main matrix definition.

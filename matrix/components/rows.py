@@ -5,23 +5,16 @@ from functools import partial
 from numbers import Real
 
 from ..utils import *
+from .bases import *
 from .elements import to_Element
 
 __all__ = ("Rows",)
 
-class Rows:
+class Rows(RowsCols):
     """A (pseudo-container) view over the rows of a matrix."""
 
     # mainly to disable abitrary atributes.
-    __slots__ = ("__matrix",)
-
-    def __init__(self, matrix):
-        """See class Description."""
-
-        self.__matrix = matrix
-
-    def __repr__(self):
-        return f"<Rows of {self.__matrix!r}>"
+    __slots__ = ()
 
     def __getitem__(self, sub):
         """
@@ -76,7 +69,7 @@ class Rows:
         if isinstance(sub, int):
             if 0 < sub <= self.__matrix.nrow:
                 del self.__matrix._array[sub-1]
-                self.__matrix._Matrix__nrow -= 1
+                self.__matrix.__nrow -= 1
             else:
                 raise IndexError("Index out of range.")
         elif isinstance(sub, slice):
@@ -84,9 +77,12 @@ class Rows:
             if (diff := slice_length(sub)) == self.__matrix.nrow:
                 raise ValueError("Emptying the matrix isn't allowed.")
             del self.__matrix._array[sub]
-            self.__matrix._Matrix__nrow -= diff
+            self.__matrix.__nrow -= diff
         else:
             raise TypeError("Subscript must either be an integer or a slice.")
+
+    def __len__(self):
+        return self.__matrix.nrow
 
     def __iter__(self):
         return map(partial(Row, self.__matrix), range(self.__matrix.nrow))
