@@ -85,7 +85,9 @@ class Rows(RowsCols):
         return self.__matrix.nrow
 
     def __iter__(self):
-        return map(partial(Row, self.__matrix), range(self.__matrix.nrow))
+        return MatrixIter(
+                    map(partial(Row, self.__matrix), range(self.__matrix.nrow)),
+                    self.__matrix)
 
 
 class RowsSlice(RowsColumnsSlice):
@@ -115,8 +117,9 @@ class RowsSlice(RowsColumnsSlice):
         raise TypeError("Subscript must either be an integer or a slice.")
 
     def __iter__(self):
-        return map(partial(Row, self.__matrix),
-                    range(*self.__slice.indices(self.__slice.stop)))
+        return MatrixIter(map(partial(Row, self.__matrix),
+                                range(*self.__slice.indices(self.__slice.stop))),
+                            self.__matrix)
 
 
 class Row(RowColumn):
@@ -185,5 +188,5 @@ class Row(RowColumn):
         return self.__matrix.ncol
 
     def __iter__(self):
-        return iter(self.__matrix._array[self.__index])
+        return MatrixIter(iter(self.__matrix._array[self.__index]), self.__matrix)
 

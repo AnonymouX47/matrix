@@ -188,24 +188,30 @@ class Matrix:
     def __iter__(self):
         """
         Returns a generator that yields the *elements* of the matrix.
+        Raises a `RuntimeError` if the matrix is resized during iteration.
 
-        With the "advanced" form, the generator can be set
-        to any vaild row and column of the matrix
+        The generator can be set to any vaild row and column of the matrix
         from which to continue iteration using the send() method.
-        NOTE: Recall that the matrix is *1-indexed* when using the send method.
+
+        NOTE:
+        1. Recall that the matrix is *1-indexed* when using the send method.
+        2. `MatrixIter()` isn't used here:
+           - to allow for the advanced usage without extra performance cost.
+           - cos it's purpose can simply be achieved thus, with better performace.
         """
 
-        # Simple
-        # for row in self.__array:
-        #     yield from row
-
-        # Advanced
+        size = self.size  # for comparison during iteration
         r = 0
         while r < self.__nrow:
             c = 0
             row = self.__array[r]
             while c < self.__ncol:
-                if r_c := (yield row[c]):
+                r_c = (yield row[c])
+
+                if size != self.size:
+                    raise RuntimeError("The matrix was resized during iteration.")
+
+                if r_c:
                     if isinstance(r_c, tuple) and len(r_c) == 2:
                         r, c = r_c[0] - 1, r_c[1] - 2
                         row = self.__array[r]

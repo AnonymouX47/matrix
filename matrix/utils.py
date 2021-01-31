@@ -188,3 +188,43 @@ def retry_mangled(get_set_del, cls_name):
 
     return wrapper
 
+
+class MatrixIter:
+    """
+    Iterator class for matrix Rows and Columns.
+    Mainly implemented to detect if a matrix resized upon iteration.
+    Similar to the behaviour of dictionaries.
+
+    - 'iterator' -> The underlying **iterator**,
+      whose `next()` would be "yielded" on each iteration.
+      This is to allow various classes with varying forms of iterations to use
+      the same iterator class, and all have the benefit of the resize-detection.
+    - 'matrix' -> The matrix whose component is being iterated over.
+
+    ==NOTE:==
+    1. Just as for dicts, the resize is not detected until
+      the end of the current iteration or beginning of the next iteration.
+      Hence, if the Error raised is handled, the matrix will be in the resized state.
+    2. It achieves this definitely at the cost of performance.
+    """
+
+    # mainly to disable abitrary atributes.
+    __slots__ = ("__iter", "__matrix", "__size")
+
+    def __init__(self, iterator, matrix):
+        self.__iter = iter(iterator)  # iter() to ensure an iterator is stored.
+        self.__matrix = matrix
+
+        # for comparison of sizes during iteration,
+        # to ensure the matrix hasn't been resized.
+        self.__size = matrix.size
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self.__size != self.__matrix.size:
+            raise RuntimeError("The matrix was resized during iteration.")
+
+        return next(self.__iter)  # StopIteration is also propagated.
+
