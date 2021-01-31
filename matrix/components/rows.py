@@ -190,3 +190,15 @@ class Row(RowColumn):
     def __iter__(self):
         return MatrixIter(iter(self.__matrix._array[self.__index]), self.__matrix)
 
+    def __contains__(self, item):
+        return item in self.__matrix._array[self.__index]
+
+    def __eq__(self, other):
+        if self.__matrix is other.__matrix and self.__index == other.__index:
+            return True
+        else:
+            lhs = self.__matrix._array[self.__index]
+            rhs = other.__matrix._array[self.__index]
+
+            return lhs == rhs
+

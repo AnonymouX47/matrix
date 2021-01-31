@@ -198,3 +198,15 @@ class Column(RowColumn):
         return MatrixIter((row[self.__index] for row in self.__matrix._array),
                             self.__matrix)
 
+    def __contains__(self, item):
+        return any(item == row[self.__index] for row in self.__matrix._array)
+
+    def __eq__(self, other):
+        if self.__matrix is other.__matrix and self.__index == other.__index:
+            return True
+        else:
+            i1 = self.__index
+            i2 = other.__index
+            return all(r1[i1] == r2[i2] for r1, r2 in zip(self.__matrix._array,
+                                                            other.__matrix._array))
+
