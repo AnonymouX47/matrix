@@ -97,7 +97,12 @@ class Columns(RowsCols):
 
 
 class ColumnsSlice(RowsColumnsSlice):
-    """A (pseudo-container) view over a slice of the colums of a matrix."""
+    """
+    A (pseudo-container) view over a slice of the colums of a matrix.
+
+    NOTE: An error is raised if an operation is performed on an instance
+    after a matrix has been resized, if it was created before.
+    """
 
     # mainly to disable abitrary atributes.
     __slots__ = ()
@@ -111,6 +116,8 @@ class ColumnsSlice(RowsColumnsSlice):
         NOTE: Still 1-indexed and slice.stop is included.
         """
 
+        self.validity_check()
+
         if isinstance(sub, int):
             if 0 < sub <= self.__length:
                 return Column(self.__matrix, slice_index(self.__slice, sub-1))
@@ -123,6 +130,8 @@ class ColumnsSlice(RowsColumnsSlice):
         raise TypeError("Subscript must either be an integer or a slice.")
 
     def __iter__(self):
+        self.validity_check()
+
         return MatrixIter(map(partial(Column, self.__matrix),
                                 range(*self.__slice.indices(self.__slice.stop))),
                         self.__matrix)
@@ -139,15 +148,22 @@ class Column(RowColumn):
     - be more efficient (both time and space).
       - prevents copying element references.
     - have direct access to the underlying matrix data.
+
+    NOTE: An error is raised if an operation is performed on an instance
+    after a matrix has been resized, if it was created before.
     """
 
     # mainly to disable abitrary atributes.
     __slots__ = ()
 
     def __str__(self):
+        self.validity_check()
+
         return f"Column({[row[self.__index] for row in self.__matrix._array]})"
 
     def __getitem__(self, sub):
+        self.validity_check()
+
         """
         Returns:
         - the ith element of the column, if 'sub' is an integer, i.
@@ -166,6 +182,8 @@ class Column(RowColumn):
         raise TypeError("Subscript must either be an integer or a slice.")
 
     def __setitem__(self, sub, value):
+        self.validity_check()
+
         """
         Sets:
         - the ith element of the column to 'value', if 'sub' is an integer, i.
@@ -192,16 +210,24 @@ class Column(RowColumn):
             raise TypeError("Subscript must either be an integer or a slice.")
 
     def __len__(self):
+        self.validity_check()
+
         return self.__matrix.nrow
 
     def __iter__(self):
+        self.validity_check()
+
         return MatrixIter((row[self.__index] for row in self.__matrix._array),
                             self.__matrix)
 
     def __contains__(self, item):
+        self.validity_check()
+
         return any(item == row[self.__index] for row in self.__matrix._array)
 
     def __eq__(self, other):
+        self.validity_check()
+
         if self.__matrix is other.__matrix and self.__index == other.__index:
             return True
         else:

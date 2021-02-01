@@ -91,7 +91,12 @@ class Rows(RowsCols):
 
 
 class RowsSlice(RowsColumnsSlice):
-    """A (pseudo-container) view over a slice of the rows of a matrix."""
+    """
+    A (pseudo-container) view over a slice of the rows of a matrix.
+
+    NOTE: An error is raised if an operation is performed on an instance
+    after a matrix has been resized, if it was created before.
+    """
 
     # mainly to disable abitrary atributes.
     __slots__ = ()
@@ -106,6 +111,8 @@ class RowsSlice(RowsColumnsSlice):
         NOTE: Still 1-indexed and slice.stop is included.
         """
 
+        self.validity_check()
+
         if isinstance(sub, int):
             if 0 < sub <= self.__length:
                 return Row(self.__matrix, slice_index(self.__slice, sub-1))
@@ -117,6 +124,8 @@ class RowsSlice(RowsColumnsSlice):
         raise TypeError("Subscript must either be an integer or a slice.")
 
     def __iter__(self):
+        self.validity_check()
+
         return MatrixIter(map(partial(Row, self.__matrix),
                                 range(*self.__slice.indices(self.__slice.stop))),
                             self.__matrix)
@@ -133,12 +142,17 @@ class Row(RowColumn):
     - be more efficient (both time and space).
       - prevents copying element references.
     - have direct access to the underlying matrix data.
+
+    NOTE: An error is raised if an operation is performed on an instance
+    after a matrix has been resized, if it was created before.
     """
 
     # mainly to disable abitrary atributes.
     __slots__ = ()
 
     def __str__(self):
+        self.validity_check()
+
         return f"Row({self.__matrix._array[self.__index]})"
 
     def __getitem__(self, sub):
@@ -147,6 +161,8 @@ class Row(RowColumn):
         - the ith element of the row, if 'sub' is an integer, i.
         - a list of the elements selected by the slice, if 'sub' is a slice.
         """
+
+        self.validity_check()
 
         if isinstance(sub, int):
             if 0 < sub <= self.__matrix.ncol:
@@ -167,6 +183,8 @@ class Row(RowColumn):
           if 'sub' is a slice.
         """
 
+        self.validity_check()
+
         if isinstance(sub, int):
             if 0 < sub <= self.__matrix.ncol:
                 if isinstance(value, (Real, Decimal)):
@@ -185,15 +203,23 @@ class Row(RowColumn):
             raise TypeError("Subscript must either be an integer or a slice.")
 
     def __len__(self):
+        self.validity_check()
+
         return self.__matrix.ncol
 
     def __iter__(self):
+        self.validity_check()
+
         return MatrixIter(iter(self.__matrix._array[self.__index]), self.__matrix)
 
     def __contains__(self, item):
+        self.validity_check()
+
         return item in self.__matrix._array[self.__index]
 
     def __eq__(self, other):
+        self.validity_check()
+
         if self.__matrix is other.__matrix and self.__index == other.__index:
             return True
         else:
