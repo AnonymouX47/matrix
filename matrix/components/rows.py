@@ -10,7 +10,7 @@ from .elements import to_Element
 
 __all__ = ("Rows",)
 
-class Rows(RowsCols):
+class Rows(RowsColumns):
     """A (pseudo-container) view over the rows of a matrix."""
 
     # mainly to disable abitrary atributes.
@@ -215,10 +215,16 @@ class Row(RowColumn):
     def __contains__(self, item):
         self.validity_check()
 
+        if not isinstance(item, (Real, Decimal)):
+            raise TypeError("Matrix elements are only real numbers.")
+
         return item in self.__matrix._array[self.__index]
 
     def __eq__(self, other):
         self.validity_check()
+
+        if not isinstance(other, __class__):
+            return NotImplemented
 
         if self.__matrix is other.__matrix and self.__index == other.__index:
             return True

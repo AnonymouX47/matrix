@@ -1,9 +1,13 @@
 """Baseclasses of rows and columns classes."""
 
+from decimal import Decimal
+from numbers import Real
+from operator import mul, truediv
+
 from ..utils import display_adj_slice, mangled_attr, slice_length, MatrixResizeError
 
 @mangled_attr(_set=False, _del=False)
-class RowsCols:
+class RowsColumns:
     """Baseclass of Rows() and Columns()."""
 
     # mainly to disable abitrary atributes.
@@ -69,6 +73,98 @@ class RowColumn:
 
     def __repr__(self):
         return f"<{type(self).__name__} {self.__index + 1} of {self.__matrix!r}>"
+
+
+    # The following operations must not return Row/Column instances
+    # because they are views of the underlying matrix,
+    # which is not being modified itself.
+
+    def __add__(self, other) -> list:
+        """
+        Adds rows/columns element-by-element.
+
+        Each operand must be either a `Row` or `Column` and be of equal length.
+        """
+
+        self.validity_check()
+
+        if not isinstance(other, __class__):
+            return NotImplemented
+
+        if len(self) != len(other):
+            raise ValueError("The rows/columns must be of equal length.")
+
+        return [x + y for x, y in zip(self, other)]
+
+    def __sub__(self, other) -> list:
+        """
+        Subtracts rows/columns element-by-element.
+
+        Each operand must be either a `Row` or `Column` and be of equal length.
+        """
+
+        self.validity_check()
+
+        if not isinstance(other, __class__):
+            return NotImplemented
+
+        if len(self) != len(other):
+            raise ValueError("The rows/columns must be of equal length.")
+
+        return [x - y for x, y in zip(self, other)]
+
+    def __mul__(self, other) -> list:
+        """
+        Multiply each element of row/column by scalar.
+
+        'other' must be a real number.
+        """
+
+        self.validity_check()
+
+        if not isinstance(other, (Real, Decimal)):
+            return NotImplemented
+
+        return [elem * other for elem in self]
+
+    def __rmul__(self, other) -> list:
+        """Reflected scalar multiplication."""
+
+        return self.__mul__(other)
+
+    def __matmul__(self, other):
+        """
+        Multiply row/column by scalar, element-by-element.
+
+        Each operand must be either a `Row` or `Column` and be of equal length.
+        """
+
+        if not isinstance(other, __class__):
+            return NotImplemented
+
+        if len(self) != len(other):
+            raise ValueError("The rows/columns must be of equal length.")
+
+        return list(map(mul, self, other))
+
+    def __truediv__(self, other) -> list:
+        """
+        Divide row/column by scalar, element-by-element.
+
+        'other' must be a real number.
+        """
+
+        self.validity_check()
+
+        if isinstance(other, (Real, Decimal)):
+            return [elem / other for elem in self]
+        elif isinstance(other, __class__):
+            if len(self) != len(other):
+                raise ValueError("The rows/columns must be of equal length.")
+            return list(map(truediv, self, other))
+
+        return NotImplemented
+
 
     def validity_check(self):
         """
