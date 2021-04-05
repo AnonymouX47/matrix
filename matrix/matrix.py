@@ -234,6 +234,87 @@ class Matrix:
         return any(item in row for row in self.__array)
 
 
+    ## Matrix operations
+
+    def __add__(self, other):
+        """
+        Matrix Addition.
+
+        Both operands must be matrices and be of the same dimension.
+        """
+
+        if not isinstance(other, __class__):
+            return NotImplemented
+
+        if self.size != other.size:
+            raise ValueError("The matrices must be of equal size for `+`.")
+
+        new = __class__(*self.size)
+        for i, row_pair in enumerate(zip(self.__rows, other.__rows), 1):
+            new.__rows[i] = [a + b for a, b in zip(*row_pair)]
+
+        return new
+
+    def __sub__(self, other):
+        """
+        Matrix Subtraction.
+
+        Both operands must be matrices and be of the same dimension.
+        """
+
+        if not isinstance(other, __class__):
+            return NotImplemented
+
+        if self.size != other.size:
+            raise ValueError("The matrices must be of equal size for `-`.")
+
+        new = __class__(*self.size)
+        for i, row_pair in enumerate(zip(self.__rows, other.__rows), 1):
+            new.__rows[i] = [a - b for a, b in zip(*row_pair)]
+
+        return new
+
+    def __mul__(self, other):
+        """
+        Scalar multiplication.
+
+        'other' must be be a real number.
+        """
+
+        if not isinstance(other, (Decimal, Real)):
+            return NotImplemented
+
+        new = __class__(*self.size)
+        for i, row in enumerate(self.__rows, 1):
+            new.__rows[i] = [elem * other for elem in row]
+
+        return new
+
+    def __rmul__(self, other):
+        """
+        Reflected scalar multiplication (to support scalars as left operand).
+
+        'other' must be be a real number.
+        """
+
+        return self.__mul__(other)
+
+    def __matmul__(self, other):
+        """
+        Matrix multiplication.
+
+        'other' must be be a matrix.
+        """
+
+        if not isinstance(other, __class__):
+            return NotImplemented
+
+        new = __class__(*self.size)
+        raise NotImplementedError("Coming Soon...")
+
+        return new
+
+
     # Properties
 
     _array = property(lambda self: self.__array,
