@@ -2,7 +2,7 @@
 
 from decimal import Decimal
 from numbers import Real
-from operator import mul, truediv
+from operator import add, mul, truediv, sub
 
 from ..utils import display_adj_slice, mangled_attr, slice_length, MatrixResizeError
 
@@ -27,7 +27,7 @@ class RowsColumnsSlice:
     """Baseclass of RowsSlice() and ColumnsSlice()."""
 
     # mainly to disable abitrary atributes.
-    __slots__ = ("__matrix", "__slice", "__slice_disp", "__length", "__original_size")
+    __slots__ = ("__matrix", "__slice", "__slice_disp", "__length", "__size_hash")
 
     def __init__(self, matrix, slice_):
         """See class Description."""
@@ -36,7 +36,7 @@ class RowsColumnsSlice:
         self.__slice = slice_
         self.__slice_disp = display_adj_slice(slice_)
         self.__length = slice_length(slice_)
-        self.__original_size = matrix.size
+        self.__size_hash = hash(matrix.size)
 
     def __repr__(self):
         return f"<{type(self).__name__[:-5]} [{self.__slice_disp}] of {self.__matrix!r}>"
@@ -52,7 +52,7 @@ class RowsColumnsSlice:
         since when a "matrix-view" instance was created.
         """
 
-        if self.__original_size != self.__matrix.size:
+        if self.__size_hash != hash(self.__matrix.size):
             raise  MatrixResizeError("The matrix has been resized after"
                                     f" this matrix-view ({self!r}) was created.")
 
@@ -62,14 +62,14 @@ class RowColumn:
     """Baseclass of Row() and Column()."""
 
     # mainly to disable abitrary atributes.
-    __slots__ = ("__matrix", "__index", "__original_size")
+    __slots__ = ("__matrix", "__index", "__size_hash")
 
     def __init__(self, matrix, index):
         """See class Description."""
 
         self.__matrix = matrix
         self.__index = index
-        self.__original_size = matrix.size
+        self.__size_hash = hash(matrix.size)
 
     def __repr__(self):
         return f"<{type(self).__name__} {self.__index + 1} of {self.__matrix!r}>"
@@ -94,7 +94,7 @@ class RowColumn:
         if len(self) != len(other):
             raise ValueError("The rows/columns must be of equal length.")
 
-        return [x + y for x, y in zip(self, other)]
+        return list(map(add, self, other))
 
     def __sub__(self, other) -> list:
         """
@@ -111,7 +111,7 @@ class RowColumn:
         if len(self) != len(other):
             raise ValueError("The rows/columns must be of equal length.")
 
-        return [x - y for x, y in zip(self, other)]
+        return list(map(sub, self, other))
 
     def __mul__(self, other) -> list:
         """
@@ -172,7 +172,7 @@ class RowColumn:
         since when a "matrix-view" instance was created.
         """
 
-        if self.__original_size != self.__matrix.size:
+        if self.__size_hash != hash(self.__matrix.size):
             raise  MatrixResizeError("The matrix has been resized after"
                                     f" this matrix-view ({self!r}) was created.")
 

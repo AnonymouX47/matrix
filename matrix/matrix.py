@@ -1,6 +1,6 @@
 """Definitions of the various classes."""
 
-from operator import itemgetter
+from operator import add, itemgetter, sub
 
 from .components import *
 from .utils import *
@@ -250,8 +250,7 @@ class Matrix:
             raise ValueError("The matrices must be of equal size for `+`.")
 
         new = __class__(*self.size)
-        for i, row_pair in enumerate(zip(self.__rows, other.__rows), 1):
-            new.__rows[i] = [a + b for a, b in zip(*row_pair)]
+        new.__array = [list(map(add, *pair)) for pair in zip(self.__array, other.__array)]
 
         return new
 
@@ -269,8 +268,7 @@ class Matrix:
             raise ValueError("The matrices must be of equal size for `-`.")
 
         new = __class__(*self.size)
-        for i, row_pair in enumerate(zip(self.__rows, other.__rows), 1):
-            new.__rows[i] = [a - b for a, b in zip(*row_pair)]
+        new.__array = [list(map(sub, *pair)) for pair in zip(self.__array, other.__array)]
 
         return new
 
@@ -285,8 +283,7 @@ class Matrix:
             return NotImplemented
 
         new = __class__(*self.size)
-        for i, row in enumerate(self.__rows, 1):
-            new.__rows[i] = [elem * other for elem in row]
+        new.__array = [[element * other for element in row] for row in self.__array]
 
         return new
 
@@ -311,6 +308,21 @@ class Matrix:
 
         new = __class__(*self.size)
         raise NotImplementedError("Coming Soon...")
+
+        return new
+
+    def __truediv__(self, other):
+        """
+        Division by scalar.
+
+        'other' must be be a real number.
+        """
+
+        if not isinstance(other, (Decimal, Real)):
+            return NotImplemented
+
+        new = __class__(*self.size)
+        new.__array = [[element / other for element in row] for row in self.__array]
 
         return new
 
