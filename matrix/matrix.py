@@ -1,6 +1,6 @@
 """Definitions of the various classes."""
 
-from operator import add, itemgetter, sub
+from operator import add, itemgetter, mul, sub
 
 from .components import *
 from .utils import *
@@ -306,8 +306,14 @@ class Matrix:
         if not isinstance(other, __class__):
             return NotImplemented
 
-        new = __class__(*self.size)
-        raise NotImplementedError("Coming Soon...")
+        if not self.isconformable(self, other):
+            raise ValueError(
+                    "The matrices are not conformable in the given order")
+
+        new = __class__(self.__nrow, other.__ncol)
+        columns = list(map(tuple, other.__columns))
+        new.__array = [[sum(map(mul, row, col)) for col in columns]
+                        for row in self.__array]
 
         return new
 
@@ -399,4 +405,17 @@ class Matrix:
             self.__ncol = ncol
         elif pad_rows:
             raise ValueError("Number of columns not specified for padding.")
+
+    @staticmethod
+    def isconformable(lhs, rhs) -> bool:
+        """
+        Returns `True` if matrix 'self' is conformable with 'other',
+        otherwise `False`.
+        """
+
+        if not isinstance(lhs, __class__):
+            raise TypeError(
+                        "Only matrices can be tested for conformability.")
+
+        return lhs.__ncol == rhs.__nrow
 
