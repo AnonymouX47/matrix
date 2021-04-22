@@ -406,8 +406,60 @@ class Matrix:
         elif pad_rows:
             raise ValueError("Number of columns not specified for padding.")
 
+    def isdiagonal(self):
+        """
+        Returns `True` if the matrix is diagonal and `False` otherwise.
+        """
+
+        array = self.__array
+
+        # `-1` here to avoid `n-1` in the loop condition, two while loops below.
+        n = self.__nrow - 1
+
+        if n+1 != self.__ncol: return False  # matrix is not sqaure
+
+        # No zero on principal diagonal
+        i = 0
+        while i <= n:
+            if not array[i][i]: return False
+            i += 1
+        # All elements off the principal diagonal must be zeros.
+        i = 0
+        while i < n:
+            j = i+1
+            while j <= n:
+                # Testing diagonally-opposite squares together.
+                if array[i][j] or array[j][i]: return False
+                j += 1
+            i += 1
+
+        return True
+
+    def isnull(self):
+        """Returns `True` if the matrix is null and `False` otherwise."""
+
+        return not any(map(any, self.__array))
+
+    def issqaure(self):
+        """Returns `True` if the matrix is square and `False` otherwise."""
+
+        return self.__nrow == self.__ncol
+
+    def isunit(self):
+        """Returns `True` if a unit matrix and `False` otherwise."""
+
+        if not self.isdiagonal(): return False
+
+        array, n = self.__array, self.__nrow
+        i = 0
+        while i < n:
+            if array[i][i] != 1: return False
+            i += 1
+
+        return True
+
     @staticmethod
-    def isconformable(lhs, rhs) -> bool:
+    def isconformable(lhs, rhs):
         """
         Returns `True` if matrix 'self' is conformable with 'other',
         otherwise `False`.
