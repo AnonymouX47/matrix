@@ -237,6 +237,23 @@ class Matrix:
 
     ## Matrix operations
 
+    def __eq__(self, other):
+        """Matrix Equality"""
+
+        if not isinstance(other, __class__):
+            return NotImplemented
+
+        return self.size == other.size and self.__array == other.__array
+
+    def __bool__(self):
+        """
+        Truthiness of a matrix.
+
+        `False` if the matrix is null, otherwise `True`.
+        """
+
+        return not self.isnull()
+
     def __add__(self, other):
         """
         Matrix Addition.
@@ -361,6 +378,8 @@ class Matrix:
         if self.__nrow != self.__ncol:
             raise ValueError("This matrix in non-square, hence has no determinant.")
 
+        # NOTE: The commented code were intentionally left here for any possible
+        # debugging purposes in the future (probably by anyone testing or reviewing)
 
         def det(matrix):
             # print (matrix)
@@ -490,12 +509,27 @@ class Matrix:
         elif pad_rows:
             raise ValueError("Number of columns not specified for padding.")
 
+    def transpose(self):
+        """Transposes the matrix **in-place**,"""
+
+        self.__array[:] = map(list, zip(*self.__array))
+
+    def transpose_copy(self):
+        """
+        Returns the transpose of a matrix (self) as a new matrix
+        and leaves the original (self) unchanged.
+        """
+
+        new = self.copy()
+        new.transpose()
+
+        return new
+
+
     ## Matrix Properties
 
     def isdiagonal(self):
-        """
-        Returns `True` if the matrix is diagonal and `False` otherwise.
-        """
+        """Returns `True` if the matrix is diagonal and `False` otherwise."""
 
         array = self.__array
 
