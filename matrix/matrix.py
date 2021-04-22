@@ -1,5 +1,6 @@
 """Definitions of the various classes."""
 
+from math import prod
 from operator import add, itemgetter, mul, sub
 
 from .components import *
@@ -336,25 +337,108 @@ class Matrix:
     # Properties
 
     _array = property(lambda self: self.__array,
-                        doc="Gets underlying array of the matrix.")
+                        doc="Underlying array of the matrix.")
 
     rows = property(lambda self: self.__rows,
-                    doc="Gets Rows() instance of the matrix.")
+                    doc="Rows() instance of the matrix.")
 
     columns = property(lambda self: self.__columns,
-                        doc="Gets Columns() instance of the matrix.")
+                        doc="Columns() instance of the matrix.")
 
     nrow = property(lambda self: self.__nrow,
-                    doc="Gets number of rows of the matrix.")
+                    doc="Number of rows of the matrix.")
 
     ncol = property(lambda self: self.__ncol,
-                    doc="Gets number of columns of the matrix.")
+                    doc="Number of columns of the matrix.")
 
     size = property(lambda self: (self.__nrow, self.__ncol),
-                    doc="Gets dimension of the matrix.")
+                    doc="Dimension of the matrix.")
+
+    @property
+    def determinant(self):
+        """Determinant of the matrix."""
+
+        if self.__nrow != self.__ncol:
+            raise ValueError("This matrix in non-square, hence has no determinant.")
+
+
+        def det(matrix):
+            # print (matrix)
+            array = matrix.__array
+
+            if matrix.__nrow == 1:
+                return array[0][0]
+            if matrix.__nrow == 2:
+                determinant = array[0][0] * array[1][1] - array[0][1] * array[1][0]
+                # print(f"det={determinant}")
+                return determinant
+
+            if matrix.isdiagonal():
+                determinant = prod([array[i][i] for i in range(matrix.__nrow)])
+                # print(f"det={determinant}")
+                return determinant
+
+            columns = matrix.__columns
+            most_sparse_row = max(range(matrix.__nrow),
+                                    key=lambda row: array[row].count(0))
+            most_sparse_col = max(range(1, matrix.__ncol+1),
+                                    key=lambda col: columns[col][:].count(0))
+
+            determinant = 0
+
+            if (matrix.__columns[most_sparse_col][:].count(0)
+                > matrix.__array[most_sparse_row].count(0)):
+
+                j = most_sparse_col  # No `+1` since already 1-indexed above
+                # print("Column", j, columns[j][:])
+                if not any(columns[j]):
+                    # print(matrix)
+                    # print("det=0")
+                    return 0
+                sign = (-1) ** (1+j)
+                for i, elem in enumerate(columns[j], 1):
+                    # print(f"{i=}, {j=}, {sign=}, {elem=:g}")
+                    if elem != 0:
+                        submatrix = matrix.copy()
+                        del submatrix.__rows[i]
+                        del submatrix.__columns[j]
+                        determinant += sign * elem * det(submatrix)
+                    sign *= -1
+            else:  # Prefer row when zero-counts are equal
+                i = most_sparse_row + 1  # +1 since matrices are 1-indexed
+                # print("Row", i, array[i-1])
+                if not any(array[i-1]):
+                    # print(matrix)
+                    # print("det=0")
+                    return Element(0)
+                sign = (-1) ** (i+1)  # j=0
+                for j, elem in enumerate(array[i-1], 1):
+                    # print(f"{i=}, {j=}, {sign=}, {elem=:g}")
+                    if elem != 0:
+                        submatrix = matrix.copy()
+                        del submatrix.__rows[i]
+                        del submatrix.__columns[j]
+                        determinant += sign * elem * det(submatrix)
+                    sign *= -1
+
+            # print(matrix)
+            # print(f"det={determinant}")
+            return determinant
+
+
+        return det(self)
 
 
     # Explicit Operations
+
+    def copy(self):
+        """Creates and returns a new copy of a matrix."""
+
+        # Much faster than passing the array to Matrix().
+        new = __class__(*self.size)
+        new.__array = [row.copy() for row in self.__array]
+
+        return new
 
     def resize(self, nrow: int = None, ncol: int = None, *, pad_rows=False):
         """
@@ -406,6 +490,8 @@ class Matrix:
         elif pad_rows:
             raise ValueError("Number of columns not specified for padding.")
 
+    ## Matrix Properties
+
     def isdiagonal(self):
         """
         Returns `True` if the matrix is diagonal and `False` otherwise.
@@ -423,6 +509,7 @@ class Matrix:
         while i <= n:
             if not array[i][i]: return False
             i += 1
+
         # All elements off the principal diagonal must be zeros.
         i = 0
         while i < n:
