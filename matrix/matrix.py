@@ -304,12 +304,8 @@ class Matrix:
         new = __class__(*self.size)
         new.__array = [[element * other for element in row] for row in self.__array]
 
-        # Due to the high precision, very small numbers are kept,
-        # which should normally be zeros
-        prec = getcontext().prec - 2
-        new.__array = [[Element(0) if abs(x) < Element(f"1e-{prec}") else x
-                        for x in row]
-                        for row in new.__array]
+        # Due to floating-point limitations
+        new.__round(24)
 
         return new
 
@@ -341,12 +337,8 @@ class Matrix:
         new.__array = [[sum(map(mul, row, col)) for col in columns]
                         for row in self.__array]
 
-        # Due to the high precision, very small numbers are kept,
-        # which should normally be zeros
-        prec = getcontext().prec - 2
-        new.__array = [[Element(0) if abs(x) < Element(f"1e-{prec}") else x
-                        for x in row]
-                        for row in new.__array]
+        # Due to floating-point limitations
+        new.__round(24)
 
         return new
 
@@ -363,12 +355,8 @@ class Matrix:
         new = __class__(*self.size)
         new.__array = [[element / other for element in row] for row in self.__array]
 
-        # Due to the high precision, very small numbers are kept,
-        # which should normally be zeros
-        prec = getcontext().prec - 2
-        new.__array = [[Element(0) if abs(x) < Element(f"1e-{prec}") else x
-                        for x in row]
-                        for row in new.__array]
+        # Due to floating-point limitations
+        new.__round(24)
 
         return new
 
@@ -390,14 +378,18 @@ class Matrix:
                                 for i, row in enumerate(self.__array, 1)]
         inverse = cofactors.transpose_copy() / determinant
 
-        # Due to the high precision, very small numbers are kept,
-        # which should normally be zeros
-        prec = getcontext().prec - 4
-        inverse.__array = [[Element(0) if abs(x) < Element(f"1e-{prec}") else x
-                        for x in row]
-                        for row in inverse.__array]
+        # Due to floating-point limitations
+        inverse.__round(24)
 
         return inverse
+
+    def __round__(self, ndigits=None):
+        """Applies the specified rounding to each matrix element."""
+
+        new = __class__(*self.size)
+        new.__array = [[round(x, ndigits) for x in row] for row in self.__array]
+
+        return new
 
 
     # Properties
@@ -508,6 +500,7 @@ class Matrix:
         """Transposes the matrix **in-place**,"""
 
         self.__array[:] = map(list, zip(*self.__array))
+        self.__ncol, self.__nrow = self.size
 
     def transpose_copy(self):
         """
@@ -519,6 +512,18 @@ class Matrix:
         new.transpose()
 
         return new
+
+    def __round(self, ndigits):
+        """
+        Rounds the elements of the matrix in-place.
+
+        NOTE: Meant for internal use only.
+        """
+
+        self.__array = [[Element(round(x)) if abs(x - round(x)) < Element(f"1e-{ndigits}")
+                                    else x
+                            for x in row]
+                        for row in self.__array]
 
 
     ## Matrix Properties
@@ -650,3 +655,4 @@ def _det(matrix):
     # print(matrix)
     # print(f"det={determinant}")
     return determinant
+
