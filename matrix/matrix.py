@@ -1,5 +1,6 @@
 """Definitions of the various classes."""
 
+from decimal import getcontext
 from math import prod
 from operator import add, itemgetter, mul, sub
 
@@ -303,6 +304,13 @@ class Matrix:
         new = __class__(*self.size)
         new.__array = [[element * other for element in row] for row in self.__array]
 
+        # Due to the high precision, very small numbers are kept,
+        # which should normally be zeros
+        prec = getcontext().prec - 2
+        new.__array = [[Element(0) if abs(x) < Element(f"1e-{prec}") else x
+                        for x in row]
+                        for row in new.__array]
+
         return new
 
     def __rmul__(self, other):
@@ -333,6 +341,13 @@ class Matrix:
         new.__array = [[sum(map(mul, row, col)) for col in columns]
                         for row in self.__array]
 
+        # Due to the high precision, very small numbers are kept,
+        # which should normally be zeros
+        prec = getcontext().prec - 2
+        new.__array = [[Element(0) if abs(x) < Element(f"1e-{prec}") else x
+                        for x in row]
+                        for row in new.__array]
+
         return new
 
     def __truediv__(self, other):
@@ -348,7 +363,41 @@ class Matrix:
         new = __class__(*self.size)
         new.__array = [[element / other for element in row] for row in self.__array]
 
+        # Due to the high precision, very small numbers are kept,
+        # which should normally be zeros
+        prec = getcontext().prec - 2
+        new.__array = [[Element(0) if abs(x) < Element(f"1e-{prec}") else x
+                        for x in row]
+                        for row in new.__array]
+
         return new
+
+    def __invert__(self):
+        """Matrix Inverse"""
+
+        if self.__nrow != self.__ncol:
+            raise ValueError("This matrix in non-square, hence has no inverse.")
+
+        determinant = _det(self)
+        if not determinant:
+            raise ValueError("The determinant of this matrix is zero,"
+                            " hence has no inverse.")
+
+        cofactors = __class__(*self.size)
+        minor = self.minor
+        cofactors.__array = [[(-1)**(i+j) * minor(i, j)
+                            for j, elem in enumerate(row, 1)]
+                                for i, row in enumerate(self.__array, 1)]
+        inverse = cofactors.transpose_copy() / determinant
+
+        # Due to the high precision, very small numbers are kept,
+        # which should normally be zeros
+        prec = getcontext().prec - 4
+        inverse.__array = [[Element(0) if abs(x) < Element(f"1e-{prec}") else x
+                        for x in row]
+                        for row in inverse.__array]
+
+        return inverse
 
 
     # Properties
@@ -378,74 +427,7 @@ class Matrix:
         if self.__nrow != self.__ncol:
             raise ValueError("This matrix in non-square, hence has no determinant.")
 
-        # NOTE: The commented code were intentionally left here for any possible
-        # debugging purposes in the future (probably by anyone testing or reviewing)
-
-        def det(matrix):
-            # print (matrix)
-            array = matrix.__array
-
-            if matrix.__nrow == 1:
-                return array[0][0]
-            if matrix.__nrow == 2:
-                determinant = array[0][0] * array[1][1] - array[0][1] * array[1][0]
-                # print(f"det={determinant}")
-                return determinant
-
-            if matrix.isdiagonal():
-                determinant = prod([array[i][i] for i in range(matrix.__nrow)])
-                # print(f"det={determinant}")
-                return determinant
-
-            columns = matrix.__columns
-            most_sparse_row = max(range(matrix.__nrow),
-                                    key=lambda row: array[row].count(0))
-            most_sparse_col = max(range(1, matrix.__ncol+1),
-                                    key=lambda col: columns[col][:].count(0))
-
-            determinant = 0
-
-            if (matrix.__columns[most_sparse_col][:].count(0)
-                > matrix.__array[most_sparse_row].count(0)):
-
-                j = most_sparse_col  # No `+1` since already 1-indexed above
-                # print("Column", j, columns[j][:])
-                if not any(columns[j]):
-                    # print(matrix)
-                    # print("det=0")
-                    return 0
-                sign = (-1) ** (1+j)
-                for i, elem in enumerate(columns[j], 1):
-                    # print(f"{i=}, {j=}, {sign=}, {elem=:g}")
-                    if elem != 0:
-                        submatrix = matrix.copy()
-                        del submatrix.__rows[i]
-                        del submatrix.__columns[j]
-                        determinant += sign * elem * det(submatrix)
-                    sign *= -1
-            else:  # Prefer row when zero-counts are equal
-                i = most_sparse_row + 1  # +1 since matrices are 1-indexed
-                # print("Row", i, array[i-1])
-                if not any(array[i-1]):
-                    # print(matrix)
-                    # print("det=0")
-                    return Element(0)
-                sign = (-1) ** (i+1)  # j=0
-                for j, elem in enumerate(array[i-1], 1):
-                    # print(f"{i=}, {j=}, {sign=}, {elem=:g}")
-                    if elem != 0:
-                        submatrix = matrix.copy()
-                        del submatrix.__rows[i]
-                        del submatrix.__columns[j]
-                        determinant += sign * elem * det(submatrix)
-                    sign *= -1
-
-            # print(matrix)
-            # print(f"det={determinant}")
-            return determinant
-
-
-        return det(self)
+        return _det(self)
 
 
     # Explicit Operations
@@ -458,6 +440,19 @@ class Matrix:
         new.__array = [row.copy() for row in self.__array]
 
         return new
+
+    def minor(self, i, j):
+        """Returns the minor of element at [i, j]"""
+
+        if self.__nrow != self.__ncol:
+            raise ValueError("This matrix in non-square,"
+                            " hence it's elements have no minors.")
+
+        submatrix = self.copy()
+        del submatrix.__rows[i]
+        del submatrix.__columns[j]
+
+        return _det(submatrix)
 
     def resize(self, nrow: int = None, ncol: int = None, *, pad_rows=False):
         """
@@ -592,3 +587,66 @@ class Matrix:
 
         return lhs.__ncol == rhs.__nrow
 
+
+
+# Utility functions
+
+def _det(matrix):
+    # NOTE: The commented code were intentionally left here for any possible
+    # debugging purposes in the future (probably by anyone testing or reviewing)
+
+    # print (matrix)
+    array = matrix._array
+
+    if matrix.nrow == 1:
+        return array[0][0]
+    if matrix.nrow == 2:
+        determinant = array[0][0] * array[1][1] - array[0][1] * array[1][0]
+        # print(f"det={determinant}")
+        return determinant
+
+    if matrix.isdiagonal():
+        determinant = prod([array[i][i] for i in range(matrix.nrow)])
+        # print(f"det={determinant}")
+        return determinant
+
+    columns = matrix.columns
+    most_sparse_row = max(range(matrix.nrow),
+                            key=lambda row: array[row].count(0))
+    most_sparse_col = max(range(1, matrix.ncol+1),
+                            key=lambda col: columns[col][:].count(0))
+
+    determinant = 0
+
+    if (columns[most_sparse_col][:].count(0)
+        > array[most_sparse_row].count(0)):
+
+        j = most_sparse_col  # No `+1` since already 1-indexed above
+        # print("Column", j, columns[j][:])
+        if not any(columns[j]):
+            # print(matrix)
+            # print("det=0")
+            return Element(0)
+        sign = (-1) ** (1+j)
+        for i, elem in enumerate(columns[j], 1):
+            # print(f"{i=}, {j=}, {sign=}, {elem=:g}")
+            if elem != 0:
+                determinant += sign * elem * matrix.minor(i, j)
+            sign *= -1
+    else:  # Prefer row when zero-counts are equal
+        i = most_sparse_row + 1  # +1 since matrices are 1-indexed
+        # print("Row", i, array[i-1])
+        if not any(array[i-1]):
+            # print(matrix)
+            # print("det=0")
+            return Element(0)
+        sign = (-1) ** (i+1)  # j=0
+        for j, elem in enumerate(array[i-1], 1):
+            # print(f"{i=}, {j=}, {sign=}, {elem=:g}")
+            if elem != 0:
+                determinant += sign * elem * matrix.minor(i, j)
+            sign *= -1
+
+    # print(matrix)
+    # print(f"det={determinant}")
+    return determinant

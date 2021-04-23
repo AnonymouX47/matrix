@@ -18,6 +18,7 @@ class Element(Decimal):
 
     Had to implement support for inter-operations with `float` instances
     since `decimal.Decimal` doesn't support operations with floats.
+    Also, results of Decimal() methods are converted to Element() instances.
     """
 
     # mainly to disable abitrary atributes.
@@ -34,6 +35,11 @@ class Element(Decimal):
 
     def __neg__(self):
         return __class__(super().__neg__())
+
+    def __round__(self, *args):
+        result = super().__round__(*args)
+
+        return result if isinstance(result, int) else __class__(result)
 
     def __add__(self, other):
         result = super().__add__(other)
