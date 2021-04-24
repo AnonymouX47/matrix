@@ -2,6 +2,7 @@
 
 from decimal import getcontext
 from math import prod
+from multiprocessing import Pool
 from operator import add, itemgetter, mul, sub
 
 from .components import *
@@ -373,8 +374,16 @@ class Matrix:
 
         cofactors = __class__(*self.size)
         minor = self.minor
+
         r = range(1, self.__nrow+1)
-        cofactors.__array = [[(-1)**(i+j) * minor(i, j) for j in r] for i in r]
+        try:
+            with Pool() as pool:
+                results = iter(pool.starmap(minor, [(i, j) for i in r for j in r]))
+        except ImportError:  # Some plactforms (e.g ARM) don't support process pools.
+            cofactors.__array = [[(-1)**(i+j) * minor(i, j) for j in r] for i in r]
+        else:
+            cofactors.__array = [[(-1)**(i+j) * next(results) for j in r] for i in r]
+
         inverse = cofactors.transpose_copy() / determinant
         # Due to floating-point limitations
         inverse.__round(24)
