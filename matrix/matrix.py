@@ -531,10 +531,8 @@ class Matrix:
     def isdiagonal(self):
         """Returns `True` if the matrix is diagonal and `False` otherwise."""
 
-        array = self.__array
-
         # `-1` here to avoid `n-1` in the loop condition, two while loops below.
-        n = self.__nrow - 1
+        array, n = self.__array, self.__nrow-1
 
         if n+1 != self.__ncol: return False  # matrix is not sqaure
 
@@ -561,10 +559,38 @@ class Matrix:
 
         return not any(map(any, self.__array))
 
+    def isorthogonal(self):
+        """Returns `True` if the matrix is orthogonal and `False` otherwise."""
+
+        return (m @ m.transpose_copy()).isunit()
+
     def issqaure(self):
         """Returns `True` if the matrix is square and `False` otherwise."""
 
         return self.__nrow == self.__ncol
+
+    def issymmetric(self):
+        """Returns `True` if the matrix is symmetric and `False` otherwise."""
+
+        # `-1` here to avoid `n-1` in the loop condition below.
+        array, n = self.__array, self.__nrow-1
+
+        if n+1 != self.__ncol: return False  # matrix is not sqaure
+
+        i = 0
+        while i < n:
+            j = i+1
+            while j <= n:
+                if array[i][j] != array[j][i]: return False
+                j += 1
+            i += 1
+
+        return True
+
+    def istrianguler(self):
+        """Returns `True` if the matrix is triangular and `False` otherwise."""
+
+        return self.is_upper_triangular() or self.is_upper_triangular()
 
     def isunit(self):
         """Returns `True` if a unit matrix and `False` otherwise."""
@@ -576,6 +602,68 @@ class Matrix:
         while i < n:
             if array[i][i] != 1: return False
             i += 1
+
+        return True
+
+    def is_skew_symmetric(self):
+        """Returns `True` if the matrix is skew-symmetric and `False` otherwise."""
+
+        # `-1` here to avoid `n-1` in the loop condition below.
+        array, n = self.__array, self.__nrow-1
+
+        if n+1 != self.__ncol: return False  # matrix is not sqaure
+
+        # All zeros on principal diagonal
+        i = 0
+        while i <= n:
+            if array[i][i]: return False
+            i += 1
+
+        i = 0
+        while i < n:
+            j = i+1
+            while j <= n:
+                if array[i][j] != -array[j][i]: return False
+                j += 1
+            i += 1
+
+        return True
+
+    def is_lower_triangular(self):
+        """Returns `True` if the matrix is lower triangular and `False` otherwise."""
+
+        # `-1` here to avoid `n-1` in the loop condition below.
+        array, n = self.__array, self.__nrow-1
+
+        if n+1 != self.__ncol: return False  # matrix is not sqaure
+
+        # All elements above the principal diagonal must be zeros.
+        i = 0
+        while i < n:
+            j = i + 1
+            while j <= n:
+                if array[i][j]: return False
+                j += 1
+            i += 1
+
+        return True
+
+    def is_upper_triangular(self):
+        """Returns `True` if the matrix is upper triangular and `False` otherwise."""
+
+        # `-1` here to avoid `n-1` in the loop condition below.
+        array, n = self.__array, self.__nrow-1
+
+        if n+1 != self.__ncol: return False  # matrix is not sqaure
+
+        # All elements above the principal diagonal must be zeros.
+        j = 0
+        while j < n:
+            i = j + 1
+            while i <= n:
+                if array[i][j]: return False
+                i += 1
+            j += 1
 
         return True
 
