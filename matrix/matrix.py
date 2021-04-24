@@ -253,7 +253,7 @@ class Matrix:
         `False` if the matrix is null, otherwise `True`.
         """
 
-        return not self.isnull()
+        return not self.is_null()
 
     def __add__(self, other):
         """
@@ -328,7 +328,7 @@ class Matrix:
         if not isinstance(other, __class__):
             return NotImplemented
 
-        if not self.isconformable(self, other):
+        if not self.is_conformable(self, other):
             raise ValueError(
                     "The matrices are not conformable in the given order")
 
@@ -373,11 +373,9 @@ class Matrix:
 
         cofactors = __class__(*self.size)
         minor = self.minor
-        cofactors.__array = [[(-1)**(i+j) * minor(i, j)
-                            for j, elem in enumerate(row, 1)]
-                                for i, row in enumerate(self.__array, 1)]
+        r = range(1, self.__nrow+1)
+        cofactors.__array = [[(-1)**(i+j) * minor(i, j) for j in r] for i in r]
         inverse = cofactors.transpose_copy() / determinant
-
         # Due to floating-point limitations
         inverse.__round(24)
 
@@ -539,7 +537,7 @@ class Matrix:
 
     ## Matrix Properties
 
-    def isdiagonal(self):
+    def is_diagonal(self):
         """Returns `True` if the matrix is diagonal and `False` otherwise."""
 
         # `-1` here to avoid `n-1` in the loop condition, two while loops below.
@@ -565,22 +563,22 @@ class Matrix:
 
         return True
 
-    def isnull(self):
+    def is_null(self):
         """Returns `True` if the matrix is null and `False` otherwise."""
 
         return not any(map(any, self.__array))
 
-    def isorthogonal(self):
+    def is_orthogonal(self):
         """Returns `True` if the matrix is orthogonal and `False` otherwise."""
 
-        return (m @ m.transpose_copy()).isunit()
+        return (m @ m.transpose_copy()).is_unit()
 
-    def issqaure(self):
+    def is_sqaure(self):
         """Returns `True` if the matrix is square and `False` otherwise."""
 
         return self.__nrow == self.__ncol
 
-    def issymmetric(self):
+    def is_symmetric(self):
         """Returns `True` if the matrix is symmetric and `False` otherwise."""
 
         # `-1` here to avoid `n-1` in the loop condition below.
@@ -598,15 +596,15 @@ class Matrix:
 
         return True
 
-    def istrianguler(self):
+    def is_trianguler(self):
         """Returns `True` if the matrix is triangular and `False` otherwise."""
 
         return self.is_upper_triangular() or self.is_upper_triangular()
 
-    def isunit(self):
+    def is_unit(self):
         """Returns `True` if a unit matrix and `False` otherwise."""
 
-        if not self.isdiagonal(): return False
+        if not self.is_diagonal(): return False
 
         array, n = self.__array, self.__nrow
         i = 0
@@ -679,7 +677,7 @@ class Matrix:
         return True
 
     @staticmethod
-    def isconformable(lhs, rhs):
+    def is_conformable(lhs, rhs):
         """
         Returns `True` if matrix 'self' is conformable with 'other',
         otherwise `False`.
@@ -709,7 +707,7 @@ def _det(matrix):
         # print(f"det={determinant}")
         return determinant
 
-    if matrix.isdiagonal():
+    if matrix.is_diagonal():
         determinant = prod([array[i][i] for i in range(matrix.nrow)])
         # print(f"det={determinant}")
         return determinant
