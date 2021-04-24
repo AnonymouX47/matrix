@@ -4,6 +4,7 @@ from decimal import Decimal
 from numbers import Real
 from operator import add, mul, truediv, sub
 
+from .elements import Element
 from ..utils import display_adj_slice, mangled_attr, slice_length, MatrixResizeError
 
 @mangled_attr(_set=False, _del=False)
@@ -53,7 +54,7 @@ class RowsColumnsSlice:
         """
 
         if self.__size_hash != hash(self.__matrix.size):
-            raise  MatrixResizeError("The matrix has been resized after"
+            raise MatrixResizeError("The matrix has been resized after"
                                     f" this matrix-view ({self!r}) was created.")
 
 
@@ -125,7 +126,7 @@ class RowColumn:
         if not isinstance(other, (Real, Decimal)):
             return NotImplemented
 
-        return [elem * other for elem in self]
+        return _rounded([elem * other for elem in self])
 
     def __rmul__(self, other) -> list:
         """Reflected scalar multiplication."""
@@ -145,7 +146,7 @@ class RowColumn:
         if len(self) != len(other):
             raise ValueError("The rows/columns must be of equal length.")
 
-        return list(map(mul, self, other))
+        return _rounded(list(map(mul, self, other)))
 
     def __truediv__(self, other) -> list:
         """
@@ -157,11 +158,11 @@ class RowColumn:
         self.validity_check()
 
         if isinstance(other, (Real, Decimal)):
-            return [elem / other for elem in self]
+            return _rounded([elem / other for elem in self])
         elif isinstance(other, __class__):
             if len(self) != len(other):
                 raise ValueError("The rows/columns must be of equal length.")
-            return list(map(truediv, self, other))
+            return _rounded(list(map(truediv, self, other)))
 
         return NotImplemented
 
@@ -173,6 +174,15 @@ class RowColumn:
         """
 
         if self.__size_hash != hash(self.__matrix.size):
-            raise  MatrixResizeError("The matrix has been resized after"
+            raise MatrixResizeError("The matrix has been resized after"
                                     f" this matrix-view ({self!r}) was created.")
+
+
+# Utility functions
+
+def _rounded(row_col: list) -> list:
+    return [Element(round(x))
+                if abs(x - round(x)) < Element("1e-24")
+                else x
+            for x in row_col]
 
