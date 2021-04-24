@@ -391,6 +391,16 @@ class Matrix:
 
         return new
 
+    def __pos__(self):
+        """Returns an unchanged copy of the matrix."""
+
+        return self.copy()
+
+    def __neg__(self):
+        """Returns a copy of the matrix with each element negated."""
+
+        return self.copy() * -1
+
 
     # Properties
 
@@ -520,8 +530,9 @@ class Matrix:
         NOTE: Meant for internal use only.
         """
 
-        self.__array = [[Element(round(x)) if abs(x - round(x)) < Element(f"1e-{ndigits}")
-                                    else x
+        self.__array = [[Element(round(x))
+                                if abs(x - round(x)) < Element(f"1e-{ndigits}")
+                                else x
                             for x in row]
                         for row in self.__array]
 
