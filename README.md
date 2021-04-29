@@ -27,61 +27,72 @@ I actually made sure i didn't test out or go through any other similar project, 
 
 This is just an outline of the major features of the library. For detailed explanation of the features, see the [documentation](docs/index.md).
 
-* Matrix initialization via:
-  * Class constructor
-  * ...
-* Matrix object interactions
-  * Intelligent string representation
-  * Subscription
-    * Single-element indexing, assignment and deletion
-    * Block-slice (sub-matrix) subscription and assignment.
-  * Truthiness
-  * Membership test for elements
-  * Iteration over elements
-  * Per-element rounding
-* Matrix object properties
-  * Size
-  * Number of rows
-  * Number of columns
-  * Determinant
-* Matrix Operations
+### Matrix initialization. Via:
+* Class constructor
+* ...
+
+### Matrix object interactions
+* Intelligent string representation
+* Subscription
+  * Single-element indexing, assignment and deletion
+  * Block-slice (sub-matrix) subscription and assignment.
+* Truthiness
+* Membership test for elements
+* Iteration over elements
+* Per-element rounding
+
+### Matrix object properties
+* Size
+* Number of rows
+* Number of columns
+* Determinant
+
+### Matrix Operations
+* Equality comparison
+* Addition and subtraction
+* Scalar multiplication
+* Matrix multiplication
+* Division (by scalar)
+* Inverse
+* Transpose
+
+### Checks for matrix properties and special matrices
+* Diagonality
+* Nullity
+* Orthogonality
+* Squareness
+* Symmetry
+* Triangularity
+* Identity matrix
+* Conformability
+
+### Matrix views
+These are views of the matrix object, like `.keys()` and `.values()` are to `dict`.
+
+* Rows and Columns (and their slices). Support:
+  * Single row/column Indexing
+  * Slicing of multiple rows/columns (Yes, a slice of rows/columns can still be sliced further! :sunglasses:)
+  * Row/column assignment and deletion (Rows/Columns slices **DO NOT** support these).
+  * Length (number of rows/columns "in" the view)
+  * Iteration over rows/columns
+* Row and column. Support:
+  * String representation
+  * Single element indexing
+  * Multiple element slicing
   * Equality comparison
-  * Addition and subtraction
-  * Scalar multiplication
-  * Matrix multiplication
-  * Division (by scalar)
-  * Inverse
-  * Transpose
-* Checks for matrix properties and special matrices
-  * Diagonality
-  * Nullity
-  * Orthogonality
-  * Squareness
-  * Symmetry
-  * Triangularity
-  * Identity matrix
-  * Conformability
-* Matrix views (These are views of the matrix object, like `.keys()` and `.values()` are to `dict`.)
-  * Rows and Columns (and their slices). Support:
-    * Single row/column Indexing
-    * Slicing of multiple rows/columns (Yes, a slice of rows/columns can still be sliced further! :sunglasses:)
-    * Row/column assignment and deletion (Rows/Columns slices **DO NOT** support these).
-    * `len()`
-    * Iteration over rows/columns
-  * Row and column. Support:
-    * String representation
-    * Single element indexing
-    * Multiple element slicing
-    * Equality comparison
-    * Mathematical operations (**Also supports augmented assignment of these operations**):
-      * Addition and subtraction of row and/or columns (Element-wise)
-      * Multiplication by scalar
-      * Division by scalar
-      * Element-wise forms of the two above (i.e operation on two rows/columns element-by-element)
-      * **NOTE:** Augmented assignments of these operations are performed **in-place** i.e affect the matrix itself.
-    * `len()`
-    * Membership tests
-    * Iteration over elements
+  * Mathematical operations (Also supports augmented assignment of these operations):
+    * Addition and subtraction of rows and/or columns (Element-wise)
+    * Multiplication and Division by scalar
+    * Multiplication and Division by row/column (i.e inter-operation of two rows/columns element-by-element)
+    * **NOTE:** Augmented assignments of these operations are performed **in-place** i.e affect the matrix itself.
+  * Row/column length
+  * Membership tests
+  * Iteration over elements
+
+### Other operations on matrices
+* Matrix copy
+* Matrix resize
+* Rounded comparison
 
 ## Usage
 
