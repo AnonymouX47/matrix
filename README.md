@@ -25,31 +25,63 @@ I actually made sure i didn't test out or go through any other similar project, 
 
 ## Features
 
-This is just an highlight of the major features of the library. For detailed explanation of the features, see the [documentation](docs/index.md).
+This is just an outline of the major features of the library. For detailed explanation of the features, see the [documentation](docs/index.md).
 
 * Matrix initialization via:
   * Class constructor
   * ...
 * Matrix object interactions
+  * Intelligent string representation
   * Subscription
     * Single-element indexing, assignment and deletion
     * Block-slice (sub-matrix) subscription and assignment.
   * Truthiness
+  * Membership test for elements
   * Iteration over elements
-* Matrix properties
+  * Per-element rounding
+* Matrix object properties
   * Size
   * Number of rows
   * Number of columns
   * Determinant
-* Matrix views (These are views of the matrix object, like `.keys()` or `.values()` are to `dict`.)
+* Matrix Operations
+  * Equality comparison
+  * Addition and subtraction
+  * Scalar multiplication
+  * Matrix multiplication
+  * Division (by scalar)
+  * Inverse
+  * Transpose
+* Checks for matrix properties and special matrices
+  * Diagonality
+  * Nullity
+  * Orthogonality
+  * Squareness
+  * Symmetry
+  * Triangularity
+  * Identity matrix
+  * Conformability
+* Matrix views (These are views of the matrix object, like `.keys()` and `.values()` are to `dict`.)
   * Rows and Columns (and their slices). Support:
     * Single row/column Indexing
     * Slicing of multiple rows/columns (Yes, a slice of rows/columns can still be sliced further! :sunglasses:)
-    * Row/column assignment and deletion
+    * Row/column assignment and deletion (Rows/Columns slices **DO NOT** support these).
+    * `len()`
     * Iteration over rows/columns
   * Row and column. Support:
+    * String representation
     * Single element indexing
     * Multiple element slicing
+    * Equality comparison
+    * Mathematical operations (**Also supports augmented assignment of these operations**):
+      * Addition and subtraction of row and/or columns (Element-wise)
+      * Multiplication by scalar
+      * Division by scalar
+      * Element-wise forms of the two above (i.e operation on two rows/columns element-by-element)
+      * **NOTE:** Augmented assignments of these operations are performed **in-place** i.e affect the matrix itself.
+    * `len()`
+    * Membership tests
+    * Iteration over elements
 
 ## Usage
 
