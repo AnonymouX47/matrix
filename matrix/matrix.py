@@ -256,6 +256,15 @@ class Matrix:
 
         return self.copy() * -1
 
+    def __bool__(self):
+        """
+        Truthiness of a matrix.
+
+        `False` if the matrix is null, otherwise `True`.
+        """
+
+        return not self.is_null()
+
 
     ## Matrix operations
 
@@ -266,15 +275,6 @@ class Matrix:
             return NotImplemented
 
         return self.size == other.size and self.__array == other.__array
-
-    def __bool__(self):
-        """
-        Truthiness of a matrix.
-
-        `False` if the matrix is null, otherwise `True`.
-        """
-
-        return not self.is_null()
 
     def __add__(self, other):
         """
@@ -443,6 +443,40 @@ class Matrix:
 
     # Explicit Operations
 
+    ## Matrix Operations
+
+    def minor(self, i, j):
+        """Returns the minor of element at [i, j]"""
+
+        if self.__nrow != self.__ncol:
+            raise ValueError("This matrix in non-square,"
+                            " hence it's elements have no minors.")
+
+        submatrix = self.copy()
+        del submatrix.__rows[i]
+        del submatrix.__columns[j]
+
+        return _det(submatrix)
+
+    def transpose(self):
+        """Transposes the matrix **in-place**,"""
+
+        self.__array[:] = map(list, zip(*self.__array))
+        self.__ncol, self.__nrow = self.size
+
+    def transpose_copy(self):
+        """
+        Returns the transpose of a matrix (self) as a new matrix
+        and leaves the original (self) unchanged.
+        """
+
+        new = self.copy()
+        new.transpose()
+
+        return new
+
+    ## Other operations
+
     @staticmethod
     def compare_rounded(mat1, mat2, ndigits=None):
         """
@@ -475,19 +509,6 @@ class Matrix:
         new.__array = [row.copy() for row in self.__array]
 
         return new
-
-    def minor(self, i, j):
-        """Returns the minor of element at [i, j]"""
-
-        if self.__nrow != self.__ncol:
-            raise ValueError("This matrix in non-square,"
-                            " hence it's elements have no minors.")
-
-        submatrix = self.copy()
-        del submatrix.__rows[i]
-        del submatrix.__columns[j]
-
-        return _det(submatrix)
 
     def resize(self, nrow: int = None, ncol: int = None, *, pad_rows=False):
         """
@@ -538,23 +559,6 @@ class Matrix:
             self.__ncol = ncol
         elif pad_rows:
             raise ValueError("Number of columns not specified for padding.")
-
-    def transpose(self):
-        """Transposes the matrix **in-place**,"""
-
-        self.__array[:] = map(list, zip(*self.__array))
-        self.__ncol, self.__nrow = self.size
-
-    def transpose_copy(self):
-        """
-        Returns the transpose of a matrix (self) as a new matrix
-        and leaves the original (self) unchanged.
-        """
-
-        new = self.copy()
-        new.transpose()
-
-        return new
 
     def __round(self, ndigits):
         """
