@@ -236,6 +236,24 @@ class Matrix:
 
         return any(item in row for row in self.__array)
 
+    def __round__(self, ndigits=None):
+        """Applies the specified rounding to each matrix element."""
+
+        new = __class__(*self.size)
+        new.__array = [[round(x, ndigits) for x in row] for row in self.__array]
+
+        return new
+
+    def __pos__(self):
+        """Returns an unchanged copy of the matrix."""
+
+        return self.copy()
+
+    def __neg__(self):
+        """Returns a copy of the matrix with each element negated."""
+
+        return self.copy() * -1
+
 
     ## Matrix operations
 
@@ -306,7 +324,7 @@ class Matrix:
         new.__array = [[element * other for element in row] for row in self.__array]
 
         # Due to floating-point limitations
-        new.__round(24)
+        new.__round(12)
 
         return new
 
@@ -339,7 +357,7 @@ class Matrix:
                         for row in self.__array]
 
         # Due to floating-point limitations
-        new.__round(24)
+        new.__round(12)
 
         return new
 
@@ -357,7 +375,7 @@ class Matrix:
         new.__array = [[element / other for element in row] for row in self.__array]
 
         # Due to floating-point limitations
-        new.__round(24)
+        new.__round(12)
 
         return new
 
@@ -386,27 +404,9 @@ class Matrix:
 
         inverse = cofactors.transpose_copy() / determinant
         # Due to floating-point limitations
-        inverse.__round(24)
+        inverse.__round(12)
 
         return inverse
-
-    def __round__(self, ndigits=None):
-        """Applies the specified rounding to each matrix element."""
-
-        new = __class__(*self.size)
-        new.__array = [[round(x, ndigits) for x in row] for row in self.__array]
-
-        return new
-
-    def __pos__(self):
-        """Returns an unchanged copy of the matrix."""
-
-        return self.copy()
-
-    def __neg__(self):
-        """Returns a copy of the matrix with each element negated."""
-
-        return self.copy() * -1
 
 
     # Properties
@@ -440,6 +440,30 @@ class Matrix:
 
 
     # Explicit Operations
+
+    @staticmethod
+    def compare_rounded(mat1, mat2, ndigits=None):
+        """
+        Comapares two matrices as if the elements were rounded.
+        Useful for comparing matrices of floating-point elements.
+
+        Args:
+            mat1, mat2 -> subject matrices
+            ndigits -> an integer, the number of decimal places from which any
+                difference is irrelevant.
+        """
+
+        if not ndigits: return all(all(round(x) == round(y)
+                                        for x, y in zip(row1, row2)
+                                        )
+                                    for row1, row2 in zip(mat1.__array, mat2.__array)
+                                    )
+
+        limit = Element(f"1e-{ndigits}")
+
+        return all(all(abs(x - y) < limit for x, y in zip(row1, row2))
+                    for row1, row2 in zip(mat1.__array, mat2.__array)
+                    )
 
     def copy(self):
         """Creates and returns a new copy of a matrix."""
@@ -532,7 +556,7 @@ class Matrix:
 
     def __round(self, ndigits):
         """
-        Rounds the elements of the matrix in-place.
+        Rounds the elements of the matrix that should normally be integers, in-place.
 
         NOTE: Meant for internal use only.
         """
