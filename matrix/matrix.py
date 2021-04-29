@@ -212,7 +212,9 @@ class Matrix:
                 r_c = (yield row[c])
 
                 if size != self.size:
-                    raise  MatrixResizeError("The matrix was resized during iteration.")
+                    raise MatrixResizeError(
+                                        "The matrix was resized during iteration.",
+                                        view_obj=self)
 
                 if r_c:
                     if isinstance(r_c, tuple) and len(r_c) == 2:

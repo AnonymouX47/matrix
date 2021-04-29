@@ -43,11 +43,11 @@ class RowsColumnsSlice:
         return f"<{type(self).__name__[:-5]} [{self.__slice_disp}] of {self.__matrix!r}>"
 
     def __len__(self):
-        self.validity_check()
+        self.__validity_check()
 
         return self.__length
 
-    def validity_check(self):
+    def __validity_check(self):
         """
         Raises an error if the matrix has been resized
         since when a "matrix-view" instance was created.
@@ -55,7 +55,8 @@ class RowsColumnsSlice:
 
         if self.__size_hash != hash(self.__matrix.size):
             raise MatrixResizeError("The matrix has been resized after"
-                                    f" this matrix-view ({self!r}) was created.")
+                                    f" this matrix-view ({self!r}) was created.",
+                                    view_obj=self)
 
 
 @mangled_attr(_set=False, _del=False)
@@ -87,7 +88,7 @@ class RowColumn:
         Each operand must be either a `Row` or `Column` and be of equal length.
         """
 
-        self.validity_check()
+        self.__validity_check()
 
         if not isinstance(other, __class__):
             return NotImplemented
@@ -104,7 +105,7 @@ class RowColumn:
         Each operand must be either a `Row` or `Column` and be of equal length.
         """
 
-        self.validity_check()
+        self.__validity_check()
 
         if not isinstance(other, __class__):
             return NotImplemented
@@ -121,7 +122,7 @@ class RowColumn:
         'other' must be a real number.
         """
 
-        self.validity_check()
+        self.__validity_check()
 
         if not isinstance(other, (Real, Decimal)):
             return NotImplemented
@@ -155,7 +156,7 @@ class RowColumn:
         'other' must be a real number.
         """
 
-        self.validity_check()
+        self.__validity_check()
 
         if isinstance(other, (Real, Decimal)):
             return _rounded([elem / other for elem in self])
@@ -167,7 +168,7 @@ class RowColumn:
         return NotImplemented
 
 
-    def validity_check(self):
+    def __validity_check(self):
         """
         Raises an error if the matrix has been resized
         since when a "matrix-view" instance was created.
@@ -175,14 +176,15 @@ class RowColumn:
 
         if self.__size_hash != hash(self.__matrix.size):
             raise MatrixResizeError("The matrix has been resized after"
-                                    f" this matrix-view ({self!r}) was created.")
+                                    f" this matrix-view ({self!r}) was created.",
+                                    view_obj=self)
 
 
 # Utility functions
 
 def _rounded(row_col: list) -> list:
     return [Element(round(x))
-                if abs(x - round(x)) < Element("1e-24")
+                if abs(x - round(x)) < Element("1e-12")
                 else x
             for x in row_col]
 

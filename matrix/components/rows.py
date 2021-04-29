@@ -111,7 +111,7 @@ class RowsSlice(RowsColumnsSlice):
         NOTE: Still 1-indexed and slice.stop is included.
         """
 
-        self.validity_check()
+        self.__validity_check()
 
         if isinstance(sub, int):
             if 0 < sub <= self.__length:
@@ -124,7 +124,7 @@ class RowsSlice(RowsColumnsSlice):
         raise TypeError("Subscript must either be an integer or a slice.")
 
     def __iter__(self):
-        self.validity_check()
+        self.__validity_check()
 
         return MatrixIter(map(partial(Row, self.__matrix),
                                 range(*self.__slice.indices(self.__slice.stop))),
@@ -151,7 +151,7 @@ class Row(RowColumn):
     __slots__ = ()
 
     def __str__(self):
-        self.validity_check()
+        self.__validity_check()
 
         return f"Row({self.__matrix._array[self.__index]})"
 
@@ -162,7 +162,7 @@ class Row(RowColumn):
         - a list of the elements selected by the slice, if 'sub' is a slice.
         """
 
-        self.validity_check()
+        self.__validity_check()
 
         if isinstance(sub, int):
             if 0 < sub <= self.__matrix.ncol:
@@ -183,7 +183,7 @@ class Row(RowColumn):
           if 'sub' is a slice.
         """
 
-        self.validity_check()
+        self.__validity_check()
 
         if isinstance(sub, int):
             if 0 < sub <= self.__matrix.ncol:
@@ -203,17 +203,17 @@ class Row(RowColumn):
             raise TypeError("Subscript must either be an integer or a slice.")
 
     def __len__(self):
-        self.validity_check()
+        self.__validity_check()
 
         return self.__matrix.ncol
 
     def __iter__(self):
-        self.validity_check()
+        self.__validity_check()
 
         return MatrixIter(iter(self.__matrix._array[self.__index]), self.__matrix)
 
     def __contains__(self, item):
-        self.validity_check()
+        self.__validity_check()
 
         if not isinstance(item, (Real, Decimal)):
             raise TypeError("Matrix elements are only real numbers.")
@@ -221,7 +221,7 @@ class Row(RowColumn):
         return item in self.__matrix._array[self.__index]
 
     def __eq__(self, other):
-        self.validity_check()
+        self.__validity_check()
 
         if not isinstance(other, __class__):
             return NotImplemented

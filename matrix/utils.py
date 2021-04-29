@@ -224,7 +224,8 @@ class MatrixIter:
 
     def __next__(self):
         if self.__size != self.__matrix.size:
-            raise MatrixResizeError("The matrix was resized during iteration.")
+            raise MatrixResizeError("The matrix was resized during iteration.",
+                                    view_obj=self)
 
         return next(self.__iter)  # StopIteration is also propagated.
 
@@ -235,4 +236,14 @@ class MatrixResizeError(RuntimeError):
     
     It's just for the sake of specificity (e.g during error-handling).
     """
+
+    def __init__(self, *args, view_obj=None):
+        """
+        Args:
+            args -> tuple of all positional args passed to the class constructor.
+            view_obj -> object that triggered the error.
+        """
+
+        super().__init__(*args)
+        self.obj = view_obj
 
