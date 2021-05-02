@@ -90,6 +90,8 @@ These are views of the matrix object, like `.keys()` and `.values()` are to `dic
   * Iteration over elements
 
 ### Other operations on matrices
+* Horizontal and vertical flip
+* Clockwise and anti-clockwise rotation
 * Matrix copy
 * Matrix resize
 * Rounded comparison
@@ -102,11 +104,10 @@ These are views of the matrix object, like `.keys()` and `.values()` are to `dic
 
 1. Solution to systems of linear equations (Coming up soon).
 2. Reshaping matrices.
-3. Flipping and rotating matrices.
-4. Creating pre-filled matrices with ones, random numbers (integers or floats), optionally within a specified range, diagonal matrices, etc...
-5. Initializing matrices from STDIN or files.
-6. Implementation of methods to find eigenvalues and eigenvectors.
+3. Creating pre-filled matrices with ones, random numbers (integers or floats), optionally within a specified range, diagonal matrices, etc...
+4. Initializing matrices from STDIN or files.
+5. Implementation of methods to find eigenvalues and eigenvectors.
    * This requires a polynomial "solver" (at least for the basic approach) and I plan to work on that.
-7. Probably Others...
+6. Probably Others...
 
 Please note that I **do NOT** plan to implement any "more efficient" algorithms for the matrix operations in this project. It's not the point of this project (at least, as of now).

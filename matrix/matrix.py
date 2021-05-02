@@ -510,6 +510,16 @@ class Matrix:
 
         return new
 
+    def flip_x(self):
+        """Flips the columns of the matrix in-place (i.e horizontally)."""
+
+        for row in self.__array: row.reverse()
+
+    def flip_y(self):
+        """Flips the rows of the matrix in-place (i.e vertically)."""
+
+        self.__array.reverse()
+
     def resize(self, nrow: int = None, ncol: int = None, *, pad_rows=False):
         """
         Resizes the matrix.
@@ -559,6 +569,18 @@ class Matrix:
             self.__ncol = ncol
         elif pad_rows:
             raise ValueError("Number of columns not specified for padding.")
+
+    def rotate_left(self):
+        """Rotate the matrix 90 degrees anti-clockwise."""
+
+        self.transpose()
+        self.flip_y()
+
+    def rotate_right(self):
+        """Rotate the matrix 90 degrees clockwise."""
+
+        self.transpose()
+        self.flip_x()
 
     def __round(self, ndigits):
         """
