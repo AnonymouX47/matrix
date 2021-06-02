@@ -5,7 +5,9 @@ from numbers import Real
 from operator import add, mul, truediv, sub
 
 from .elements import Element
-from ..utils import display_adj_slice, mangled_attr, slice_length, MatrixResizeError
+from ..utils import (display_adj_slice, mangled_attr, slice_length,
+                    valid_container, MatrixResizeError
+                    )
 
 @mangled_attr(_set=False, _del=False)
 class RowsColumns:
@@ -90,7 +92,7 @@ class RowColumn:
 
         self.__validity_check()
 
-        if not isinstance(other, __class__):
+        if not (isinstance(other, __class__) or valid_container(other)):
             return NotImplemented
 
         if len(self) != len(other):
@@ -107,7 +109,7 @@ class RowColumn:
 
         self.__validity_check()
 
-        if not isinstance(other, __class__):
+        if not (isinstance(other, __class__) or valid_container(other)):
             return NotImplemented
 
         if len(self) != len(other):
@@ -136,18 +138,24 @@ class RowColumn:
 
     def __matmul__(self, other):
         """
-        Multiply row/column by scalar, element-by-element.
+        Element-wise multiplication of rows/columns.
 
-        Each operand must be either a `Row` or `Column` and be of equal length.
+        The second operand must be a `Row`, `Column`
+        or any iterable of real numbers and be of equal length.
         """
 
-        if not isinstance(other, __class__):
+        if not (isinstance(other, __class__) or valid_container(other)):
             return NotImplemented
 
         if len(self) != len(other):
             raise ValueError("The rows/columns must be of equal length.")
 
         return _rounded(list(map(mul, self, other)))
+
+    def __rmatmul__(self, other):
+        """Reflected row/column element-wise multiplication"""
+
+        return self.__matmul__(other)
 
     def __truediv__(self, other) -> list:
         """
@@ -160,7 +168,7 @@ class RowColumn:
 
         if isinstance(other, (Real, Decimal)):
             return _rounded([elem / other for elem in self])
-        elif isinstance(other, __class__):
+        elif isinstance(other, __class__) or valid_container(other):
             if len(self) != len(other):
                 raise ValueError("The rows/columns must be of equal length.")
             return _rounded(list(map(truediv, self, other)))
