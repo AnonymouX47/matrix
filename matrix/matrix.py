@@ -381,6 +381,20 @@ class Matrix:
 
         return new
 
+    def __pow__(self, exp):
+        """Repeated matrix multilication"""
+
+        if not isinstance(exp, int): return NotImplemented
+
+        if 1 > exp != -1: raise ValueError("Matrix exponent can only be -1 or >=1.")
+
+        if exp == -1: return ~self
+
+        new = self.copy()
+        for _ in range(exp - 1): new @= self
+
+        return new
+
     def __invert__(self):
         """Matrix Inverse"""
 
@@ -431,6 +445,9 @@ class Matrix:
     size = property(lambda self: (self.__nrow, self.__ncol),
                     doc="Dimension of the matrix.")
 
+    trace = property(lambda self: sum(self.diagonal),
+                    doc="Trace of the matrix.")
+
     @property
     def determinant(self):
         """Determinant of the matrix."""
@@ -439,6 +456,15 @@ class Matrix:
             raise ValueError("This matrix in non-square, hence has no determinant.")
 
         return _det(self)
+
+    @property
+    def diagonal(self):
+        """Principal diagonal of the matrix."""
+
+        if self.__nrow != self.__ncol:
+            raise ValueError("The matrix is not square.")
+
+        return [self.__array[i][i] for i in range(self.__nrow)]
 
 
     # Explicit Operations
