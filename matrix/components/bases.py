@@ -98,7 +98,11 @@ class RowColumn:
         if len(self) != len(other):
             raise ValueError("The rows/columns must be of equal length.")
 
-        return list(map(add, self, other))
+        return list(map(
+                add,
+                self._fast_iter(),
+                other._fast_iter() if isinstance(other, __class__) else other
+                ))
 
     def __sub__(self, other) -> list:
         """
@@ -115,7 +119,11 @@ class RowColumn:
         if len(self) != len(other):
             raise ValueError("The rows/columns must be of equal length.")
 
-        return list(map(sub, self, other))
+        return list(map(
+                sub,
+                self._fast_iter(),
+                other._fast_iter() if isinstance(other, __class__) else other
+                ))
 
     def __mul__(self, other) -> list:
         """
@@ -129,7 +137,7 @@ class RowColumn:
         if not isinstance(other, (Real, Decimal)):
             return NotImplemented
 
-        return _rounded([elem * other for elem in self])
+        return _rounded([elem * other for elem in self._fast_iter()])
 
     def __rmul__(self, other) -> list:
         """Reflected scalar multiplication."""
@@ -150,7 +158,11 @@ class RowColumn:
         if len(self) != len(other):
             raise ValueError("The rows/columns must be of equal length.")
 
-        return _rounded(list(map(mul, self, other)))
+        return _rounded(map(
+                mul,
+                self._fast_iter(),
+                other._fast_iter() if isinstance(other, __class__) else other
+                ))
 
     def __rmatmul__(self, other):
         """Reflected row/column element-wise multiplication"""
@@ -171,7 +183,11 @@ class RowColumn:
         elif isinstance(other, __class__) or valid_container(other):
             if len(self) != len(other):
                 raise ValueError("The rows/columns must be of equal length.")
-            return _rounded(list(map(truediv, self, other)))
+            return _rounded(map(
+                    truediv,
+                    self._fast_iter(),
+                    other._fast_iter() if isinstance(other, __class__) else other
+                    ))
 
         return NotImplemented
 

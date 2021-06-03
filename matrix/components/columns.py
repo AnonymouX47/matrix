@@ -220,6 +220,11 @@ class Column(RowColumn):
         return MatrixIter((row[self.__index] for row in self.__matrix._array),
                             self.__matrix)
 
+    def _fast_iter(self):
+        """Meant to be used internally for faster iteration"""
+
+        return iter([row[self.__index] for row in self.__matrix._array])
+
     def __contains__(self, item):
         self.__validity_check()
 
