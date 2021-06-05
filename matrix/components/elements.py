@@ -8,15 +8,61 @@ Implemented and used this type because:
 """
 
 from decimal import Decimal
+from functools import wraps
 
-__all__ = ["Element", "to_Element"]
+from .utils import MethodDecoMeta
+
+__all__ = ("Element", "to_Element")
 
 
-class Element(Decimal):
+def numeric_deco(func):
+    """
+    Decorates inherited numeric methods of a class
+    to support inter-operations with `float` instances.
+    """
+
+    @wraps(func)
+    def wrapper(self, other, *args):
+        result = func(self, other, *args)
+
+        if result is NotImplemented and isinstance(other, float):
+            result = func(self,
+                          Decimal(other if other.is_integer() else str(other)),
+                          *args)
+
+        return result if result is NotImplemented else type(self)(result)
+
+    return wrapper
+
+def unary_deco(func):
+    """
+    Decorates inherited unary operation methods of a class
+    to ensure results are of the proper type.
+    """
+
+    @wraps(func)
+    def wrapper(self):
+        return type(self)(func(self))
+
+    return wrapper
+
+
+numerics = [fmt.format(name)
+                for fmt in ("__{}__", "__r{}__")
+                    for name in ("add sub mul truediv floordiv mod divmod pow")
+                                .split(' ')
+            ]
+unaries = map("__{}__".format, "abs pos neg".split(' '))
+
+
+class Element(Decimal,
+              metaclass=MethodDecoMeta,
+              decorated={numeric_deco: numerics, unary_deco: unaries}
+              ):
     """
     A matrix element.
 
-    Had to implement support for inter-operations with `float` instances
+    Implements support for inter-operations with `float` instances
     since `decimal.Decimal` doesn't support operations with floats.
     Also, results of Decimal() methods are converted to Element() instances.
     """
@@ -27,163 +73,10 @@ class Element(Decimal):
     def __repr__(self):
         return "%s(%r)" % (__class__.__name__, self.__str__())
 
-    def __abs__(self):
-        return __class__(super().__abs__())
-
-    def __pos__(self):
-        return __class__(super().__pos__())
-
-    def __neg__(self):
-        return __class__(super().__neg__())
-
     def __round__(self, *args):
         result = super().__round__(*args)
 
         return result if isinstance(result, int) else __class__(result)
-
-    def __add__(self, other):
-        result = super().__add__(other)
-
-        if result is NotImplemented and isinstance(other, float):
-            result = super().__add__(
-                        __class__(other if other.is_integer() else str(other)))
-
-        return result if result is NotImplemented else __class__(result)
-
-    def __sub__(self, other):
-        result = super().__sub__(other)
-
-        if result is NotImplemented and isinstance(other, float):
-            result = super().__sub__(
-                        __class__(other if other.is_integer() else str(other)))
-
-        return result if result is NotImplemented else __class__(result)
-
-    def __mul__(self, other):
-        result = super().__mul__(other)
-
-        if result is NotImplemented and isinstance(other, float):
-            result = super().__mul__(
-                        __class__(other if other.is_integer() else str(other)))
-
-        return result if result is NotImplemented else __class__(result)
-
-    def __truediv__(self, other):
-        result = super().__truediv__(other)
-
-        if result is NotImplemented and isinstance(other, float):
-            result = super().__truediv__(
-                        __class__(other if other.is_integer() else str(other)))
-
-        return result if result is NotImplemented else __class__(result)
-
-    def __floordiv__(self, other):
-        result = super().__floordiv__(other)
-
-        if result is NotImplemented and isinstance(other, float):
-            result = super().__floordiv__(
-                        __class__(other if other.is_integer() else str(other)))
-
-        return result if result is NotImplemented else __class__(result)
-
-    def __mod__(self, other):
-        result = super().__mod__(other)
-
-        if result is NotImplemented and isinstance(other, float):
-            result = super().__mod__(
-                        __class__(other if other.is_integer() else str(other)))
-
-        return result if result is NotImplemented else __class__(result)
-
-    def __divmod__(self, other):
-        result = super().__divmod__(other)
-
-        if result is NotImplemented and isinstance(other, float):
-            result = super().__divmod__(
-                        __class__(other if other.is_integer() else str(other)))
-
-        return result if result is NotImplemented else __class__(result)
-
-    def __pow__(self, other, mod=None):
-        result = super().__pow__(other, mod)
-
-        if result is NotImplemented and isinstance(other, float):
-            result = super().__pow__(
-                        __class__(other if other.is_integer() else str(other)), mod)
-
-        return result if result is NotImplemented else __class__(result)
-
-    def __radd__(self, other):
-        result = super().__radd__(other)
-
-        if result is NotImplemented and isinstance(other, float):
-            result = super().__radd__(
-                        __class__(other if other.is_integer() else str(other)))
-
-        return result if result is NotImplemented else __class__(result)
-
-    def __rsub__(self, other):
-        result = super().__rsub__(other)
-
-        if result is NotImplemented and isinstance(other, float):
-            result = super().__rsub__(
-                        __class__(other if other.is_integer() else str(other)))
-
-        return result if result is NotImplemented else __class__(result)
-
-    def __rmul__(self, other):
-        result = super().__rmul__(other)
-
-        if result is NotImplemented and isinstance(other, float):
-            result = super().__rmul__(
-                        __class__(other if other.is_integer() else str(other)))
-
-        return result if result is NotImplemented else __class__(result)
-
-    def __rtruediv__(self, other):
-        result = super().__rtruediv__(other)
-
-        if result is NotImplemented and isinstance(other, float):
-            result = super().__rtruediv__(
-                        __class__(other if other.is_integer() else str(other)))
-
-        return result if result is NotImplemented else __class__(result)
-
-    def __rfloordiv__(self, other):
-        result = super().__rfloordiv__(other)
-
-        if result is NotImplemented and isinstance(other, float):
-            result = super().__rfloordiv__(
-                        __class__(other if other.is_integer() else str(other)))
-
-        return result if result is NotImplemented else __class__(result)
-
-    def __rmod__(self, other):
-        result = super().__rmod__(other)
-
-        if result is NotImplemented and isinstance(other, float):
-            result = super().__rmod__(
-                        __class__(other if other.is_integer() else str(other)))
-
-        return result if result is NotImplemented else __class__(result)
-
-    def __rdivmod__(self, other):
-        result = super().__rdivmod__(other)
-
-        if result is NotImplemented and isinstance(other, float):
-            result = super().__rdivmod__(
-                        __class__(other if other.is_integer() else str(other)))
-
-        return result if result is NotImplemented else __class__(result)
-
-    def __rpow__(self, other, mod=None):
-        result = super().__rpow__(other, mod)
-
-        if result is NotImplemented and isinstance(other, float):
-            result = super().__rpow__(
-                        __class__(other if other.is_integer() else str(other)), mod)
-
-        return result if result is NotImplemented else __class__(result)
 
 
 def to_Element(value):

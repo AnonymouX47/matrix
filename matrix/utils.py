@@ -7,6 +7,7 @@ from numbers import Real
 
 from .components import to_Element
 
+
 def display_slice(s: slice):
     """Returns a colon-separated string representation of a slice."""
 
@@ -233,15 +234,15 @@ class MatrixIter:
 class MatrixResizeError(RuntimeError):
     """
     The exception raised for errors related to resizing a matrix.
-    
     It's just for the sake of specificity (e.g during error-handling).
+
+    Args:
+        - args -> tuple of all positional args passed to the class constructor.
+        - view_obj -> object that triggered the error.
     """
 
     def __init__(self, *args, view_obj=None):
         """
-        Args:
-            args -> tuple of all positional args passed to the class constructor.
-            view_obj -> object that triggered the error.
         """
 
         super().__init__(*args)
