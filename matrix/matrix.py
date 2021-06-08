@@ -437,6 +437,22 @@ class Matrix:
 
         return inverse
 
+    def __or__(self, other):
+        """Matrix Augmentation"""
+
+        if not isinstance(other, __class__):
+            return Notimplemented
+        if self.__nrow != other.__nrow:
+            raise MatrixDimensionError(
+                    "The number of rows the matrices must be equal.")
+
+        new = self.copy()
+        for row1, row2 in zip(new.__array, other.__array):
+            row1.extend(row2)
+        new.__ncol += other.__ncol
+
+        return new
+
 
     # Properties
 
