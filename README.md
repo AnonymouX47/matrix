@@ -46,6 +46,8 @@ This is just an outline of the major features of the library. For detailed expla
 * Number of rows
 * Number of columns
 * Determinant
+* Principal diagonal
+* Trace
 
 ### Matrix Operations
 * Equality comparison

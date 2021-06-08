@@ -36,7 +36,7 @@ class Matrix:
 
     # Implicit Operations
 
-    def __init__(self, rows_array=None, cols_zfill=None):
+    def __init__(self, rows_array=None, cols_zfill=None, /):
         """See class Description."""
 
         if isinstance(rows_array, int) and isinstance(cols_zfill, int):
@@ -354,7 +354,7 @@ class Matrix:
                     "The matrices are not conformable in the given order")
 
         new = __class__(self.__nrow, other.__ncol)
-        columns = list(map(tuple, other.__columns))
+        columns = tuple(zip(*self.__array))
         new.__array = [[sum(map(mul, row, col)) for col in columns]
                         for row in self.__array]
 
@@ -733,7 +733,7 @@ class Matrix:
 
         if n+1 != self.__ncol: return False  # matrix is not sqaure
 
-        # All elements above the principal diagonal must be zeros.
+        # All elements **above** the principal diagonal must be zeros.
         i = 0
         while i < n:
             j = i + 1
@@ -752,7 +752,7 @@ class Matrix:
 
         if n+1 != self.__ncol: return False  # matrix is not sqaure
 
-        # All elements above the principal diagonal must be zeros.
+        # All elements **below** the principal diagonal must be zeros.
         j = 0
         while j < n:
             i = j + 1
@@ -799,7 +799,7 @@ def _det(matrix):
         # print(f"det={determinant}")
         return determinant
 
-    columns = matrix.columns
+    columns = matrix.columns  # More efficient than converting to nested lists, tested.
     most_sparse_row = max(range(matrix.nrow),
                             key=lambda row: array[row].count(0))
     most_sparse_col = max(range(1, matrix.ncol+1),
@@ -808,7 +808,7 @@ def _det(matrix):
     determinant = 0
 
     if (columns[most_sparse_col][:].count(0)
-        > array[most_sparse_row].count(0)):
+        > array[most_sparse_row].count(0)):  # Use column
 
         j = most_sparse_col  # No `+1` since already 1-indexed above
         # print("Column", j, columns[j][:])
@@ -816,20 +816,22 @@ def _det(matrix):
             # print(matrix)
             # print("det=0")
             return Element(0)
-        sign = (-1) ** (1+j)
+        sign = (-1) ** (1+j)  # i=1
         for i, elem in enumerate(columns[j], 1):
             # print(f"{i=}, {j=}, {sign=}, {elem=:g}")
             if elem != 0:
                 determinant += sign * elem * matrix.minor(i, j)
             sign *= -1
+
     else:  # Prefer row when zero-counts are equal
-        i = most_sparse_row + 1  # +1 since matrices are 1-indexed
+
+        i = most_sparse_row + 1  # `+1` since matrices are 1-indexed
         # print("Row", i, array[i-1])
         if not any(array[i-1]):
             # print(matrix)
             # print("det=0")
             return Element(0)
-        sign = (-1) ** (i+1)  # j=0
+        sign = (-1) ** (i+1)  # j=1
         for j, elem in enumerate(array[i-1], 1):
             # print(f"{i=}, {j=}, {sign=}, {elem=:g}")
             if elem != 0:
