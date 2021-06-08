@@ -238,13 +238,26 @@ class MatrixResizeError(RuntimeError):
 
     Args:
         - args -> tuple of all positional args passed to the class constructor.
-        - view_obj -> object that triggered the error.
+        - view_obj -> object that triggered the error. Stored as an instance
+        attribute with the same name.
     """
 
     def __init__(self, *args, view_obj=None):
-        """
-        """
-
         super().__init__(*args)
         self.obj = view_obj
+
+
+class MatrixDimensionError(ValueError):
+    """
+    The exception raised for errors related to incorrect or incompatible
+    matrix dimensions.
+
+    Args:
+        - matrices -> a tuple containing the matrix/matrices responsible
+        for the error. Stored as an instance attribute with the same name.
+    """
+
+    def __init__(self, *args, matrices=None):
+        super().__init__(*args)
+        self.matrices = matrices
 

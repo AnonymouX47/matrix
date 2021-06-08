@@ -287,10 +287,14 @@ class Matrix:
             return NotImplemented
 
         if self.size != other.size:
-            raise ValueError("The matrices must be of equal size for `+`.")
+            raise MatrixDimensionError(
+                    "The matrices must be of equal size for `+`.",
+                    matrices=(self, other)
+                    )
 
         new = __class__(*self.size)
-        new.__array = [list(map(add, *pair)) for pair in zip(self.__array, other.__array)]
+        new.__array = [list(map(add, *pair))
+                        for pair in zip(self.__array, other.__array)]
 
         return new
 
@@ -305,10 +309,14 @@ class Matrix:
             return NotImplemented
 
         if self.size != other.size:
-            raise ValueError("The matrices must be of equal size for `-`.")
+            raise MatrixDimensionError(
+                    "The matrices must be of equal size for `-`.",
+                    matrices=(self, other)
+                    )
 
         new = __class__(*self.size)
-        new.__array = [list(map(sub, *pair)) for pair in zip(self.__array, other.__array)]
+        new.__array = [list(map(sub, *pair))
+                        for pair in zip(self.__array, other.__array)]
 
         return new
 
@@ -350,8 +358,10 @@ class Matrix:
             return NotImplemented
 
         if not self.is_conformable(self, other):
-            raise ValueError(
-                    "The matrices are not conformable in the given order")
+            raise MatrixDimensionError(
+                    "The matrices are not conformable in the given order",
+                    matrices=(self, other)
+                    )
 
         new = __class__(self.__nrow, other.__ncol)
         columns = tuple(zip(*self.__array))
@@ -399,7 +409,10 @@ class Matrix:
         """Matrix Inverse"""
 
         if self.__nrow != self.__ncol:
-            raise ValueError("This matrix in non-square, hence has no inverse.")
+            raise MatrixDimensionError(
+                    "This matrix in non-square, hence has no inverse.",
+                    matrices=(self,)
+                    )
 
         determinant = _det(self)
         if not determinant:
@@ -418,7 +431,7 @@ class Matrix:
         else:
             cofactors.__array = [[(-1)**(i+j) * next(results) for j in r] for i in r]
 
-        inverse = cofactors.transpose_copy() / determinant
+        inverse = cofactors.transpose() / determinant
         # Due to floating-point limitations
         inverse.__round(12)
 
@@ -453,7 +466,10 @@ class Matrix:
         """Determinant of the matrix."""
 
         if self.__nrow != self.__ncol:
-            raise ValueError("This matrix in non-square, hence has no determinant.")
+            raise MatrixDimensionError(
+                    "This matrix in non-square, hence has no determinant.",
+                    matrices=(self,)
+                    )
 
         return _det(self)
 
@@ -462,7 +478,9 @@ class Matrix:
         """Principal diagonal of the matrix."""
 
         if self.__nrow != self.__ncol:
-            raise ValueError("The matrix is not square.")
+            raise MatrixDimensionError("The matrix is not square.",
+                                        matrices=(self,)
+                                        )
 
         return [self.__array[i][i] for i in range(self.__nrow)]
 
@@ -475,8 +493,10 @@ class Matrix:
         """Returns the minor of element at [i, j]"""
 
         if self.__nrow != self.__ncol:
-            raise ValueError("This matrix in non-square,"
-                            " hence it's elements have no minors.")
+            raise MatrixDimensionError(
+                    "This matrix in non-square, hence it's elements have no minors.",
+                    matrices=(self,)
+                    )
 
         submatrix = self.copy()
         del submatrix.__rows[i]
@@ -484,20 +504,20 @@ class Matrix:
 
         return _det(submatrix)
 
-    def transpose(self):
+    def itranspose(self):
         """Transposes the matrix **in-place**,"""
 
         self.__array[:] = map(list, zip(*self.__array))
         self.__ncol, self.__nrow = self.size
 
-    def transpose_copy(self):
+    def transpose(self):
         """
         Returns the transpose of a matrix (self) as a new matrix
         and leaves the original (self) unchanged.
         """
 
         new = self.copy()
-        new.transpose()
+        new.itranspose()
 
         return new
 
@@ -550,8 +570,10 @@ class Matrix:
         """
         Resizes the matrix.
 
-        Truncates, if the new dimension is less than the current for either or both axes.
-        Zero-fills, if the new dimension is greater than the current on either or both axes.
+        Truncates, if the new dimension is less than the current
+        on either or both axes.
+        Zero-fills, if the new dimension is greater than the current
+        on either or both axes.
 
         If 'pad_rows' is true, pad each row of the underlying array
         to match up to the given number of columns.
@@ -564,7 +586,7 @@ class Matrix:
 
         if any(None is not x < 1 for x in (nrow, ncol)):
             # At least one of the new dimensions given is less than 1.
-            raise ValueError("Any specified dimension must be +ve.")
+            raise ValueError("Any specified dimension must be greater than zero.")
 
         # Number of rows
         if nrow:  # 'nrow' can only be either None or a +ve integer at this point.
@@ -581,7 +603,7 @@ class Matrix:
             if pad_rows:
                 if any(len(row) > ncol for row in self.__array):
                     raise ValueError("Specified number of columns is"
-                                        " less than length of longest row.")
+                                     " less than length of longest row.")
                 for row in self.__array: row.extend([Element(0)] * (ncol - len(row)))
                 self.__ncol = ncol
                 return
@@ -599,13 +621,13 @@ class Matrix:
     def rotate_left(self):
         """Rotate the matrix 90 degrees anti-clockwise."""
 
-        self.transpose()
+        self.itranspose()
         self.flip_y()
 
     def rotate_right(self):
         """Rotate the matrix 90 degrees clockwise."""
 
-        self.transpose()
+        self.itranspose()
         self.flip_x()
 
     def __round(self, ndigits):
@@ -658,7 +680,7 @@ class Matrix:
     def is_orthogonal(self):
         """Returns `True` if the matrix is orthogonal and `False` otherwise."""
 
-        return (m @ m.transpose_copy()).is_unit()
+        return (m @ m.transpose()).is_unit()
 
     def is_sqaure(self):
         """Returns `True` if the matrix is square and `False` otherwise."""
@@ -771,8 +793,7 @@ class Matrix:
         """
 
         if not isinstance(lhs, __class__):
-            raise TypeError(
-                        "Only matrices can be tested for conformability.")
+            raise TypeError("Only matrices can be tested for conformability.")
 
         return lhs.__ncol == rhs.__nrow
 
