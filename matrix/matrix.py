@@ -1,6 +1,6 @@
 """Definitions of the various classes."""
 
-from decimal import getcontext
+import decimal
 from math import prod
 from multiprocessing import Pool
 from operator import add, itemgetter, mul, sub
@@ -42,11 +42,12 @@ class Matrix:
         if isinstance(rows_array, int) and isinstance(cols_zfill, int):
             rows, cols = rows_array, cols_zfill
 
-            if rows > 0 and cols > 0:
+            if rows > 0 < cols:
                 self.__array = [[Element(0)] * cols for _ in range(rows)]
                 self.__nrow, self.__ncol = rows, cols
             else:
-                raise ValueError("Both dimensions must be positive integers.")
+                raise MatrixDimensionError(
+                        "Matrix dimensions must be greater than zero.")
         elif is_iterable(rows_array) and isinstance(cols_zfill, (type(None), bool)):
             minlen, maxlen, self.__nrow, array = valid_2D_iterable(rows_array)
 
@@ -364,7 +365,7 @@ class Matrix:
                     )
 
         new = __class__(self.__nrow, other.__ncol)
-        columns = tuple(zip(*self.__array))
+        columns = tuple(zip(*other.__array))
         new.__array = [[sum(map(mul, row, col)) for col in columns]
                         for row in self.__array]
 
@@ -414,24 +415,32 @@ class Matrix:
                     matrices=(self,)
                     )
 
-        determinant = _det(self)
-        if not determinant:
+        augmented = self | unit_matrix(self.__nrow)
+        array = augmented.__array
+        rows = augmented.__rows
+        nrow = augmented.__nrow
+
+        try:  # Forgiveness is way less costly
+
+            # Reduce lower triangle of `self`
+            for j in range(nrow):
+                for i in range(j+1, nrow):
+                    rows[i+1] -= rows[j+1] * (array[i][j] / array[j][j])
+
+            # Reduce upper triangle of `self`
+            for j in range(nrow-1, 0, -1):
+                for i in range(j-1, -1, -1):
+                    rows[i+1] -= rows[j+1] * (array[i][j] / array[j][j])
+
+            # Reduce diagonal elements of `self` to ones
+            for i in range(nrow):
+                rows[i+1] /= array[i][i]
+
+        except (decimal.DivisionByZero, decimal.DivisionUndefined):
             raise ValueError("The determinant of this matrix is zero,"
-                            " hence has no inverse.")
+                            " hence has no inverse.") from None
 
-        cofactors = __class__(*self.size)
-        minor = self.minor
-
-        r = range(1, self.__nrow+1)
-        try:
-            with Pool() as pool:
-                results = iter(pool.starmap(minor, [(i, j) for i in r for j in r]))
-        except ImportError:  # Some plactforms (e.g ARM) don't support process pools.
-            cofactors.__array = [[(-1)**(i+j) * minor(i, j) for j in r] for i in r]
-        else:
-            cofactors.__array = [[(-1)**(i+j) * next(results) for j in r] for i in r]
-
-        inverse = cofactors.transpose() / determinant
+        inverse = augmented[:, nrow+1:]
         # Due to floating-point limitations
         inverse.__round(12)
 
@@ -536,6 +545,58 @@ class Matrix:
         new.itranspose()
 
         return new
+
+    def reduce_lower_tri(self):
+        """
+        Reduces the lower triangle of the matrix.
+        Also works on non-square matrices.
+        """
+
+        if self.__ncol >= self.__nrow:
+            array = self.__array
+            rows = self.__rows
+            nrow = self.__nrow
+            for j in range(nrow):
+                for i in range(j+1, nrow):
+                    rows[i+1] -= rows[j+1] * (array[i][j] / array[j][j])
+        else:
+            self.flip_x(); self.flip_y()
+            self.reduce_upper_tri()
+            self.flip_x(); self.flip_y()
+
+        self.__round(12)
+
+    def reduce_upper_tri(self, *, as_square=False):
+        """
+        Reduces the upper triangle of the matrix.
+        Also works on non-square matrices.
+
+        Args:
+            - as_square -> If true, row reduction is performed as if
+            it were a square matrix of the shorter dimension,
+            though row operations still affect the  entire row.
+            Useful in cases of augmented matrices, for example.
+        """
+
+        if as_square:
+            array = self.__array
+            rows = self.__rows
+            min_dim = min(self.__nrow, self.__ncol)
+            for j in range(min_dim-1, 0, -1):
+                for i in range(j-1, -1, -1):
+                    rows[i+1] -= rows[j+1] * (array[i][j] / array[j][j])
+        elif self.__nrow >= self.__ncol:
+            array = self.__array
+            rows = self.__rows
+            for j in range(self.__ncol-1, 0, -1):
+                for i in range(j-1, -1, -1):
+                    rows[i+1] -= rows[j+1] * (array[i][j] / array[j][j])
+        else:
+            self.flip_x(); self.flip_y()
+            self.reduce_lower_tri()
+            self.flip_x(); self.flip_y()
+
+        self.__round(12)
 
     ## Other operations
 
@@ -721,7 +782,7 @@ class Matrix:
 
         return True
 
-    def is_trianguler(self):
+    def is_triangular(self):
         """Returns `True` if the matrix is triangular and `False` otherwise."""
 
         return self.is_upper_triangular() or self.is_upper_triangular()
@@ -831,7 +892,7 @@ def _det(matrix):
         # print(f"det={determinant}")
         return determinant
 
-    if matrix.is_diagonal():
+    if matrix.is_triangular():
         determinant = prod([array[i][i] for i in range(matrix.nrow)])
         # print(f"det={determinant}")
         return determinant
@@ -878,4 +939,30 @@ def _det(matrix):
     # print(matrix)
     # print(f"det={determinant}")
     return determinant
+
+
+def unit_matrix(n: int):
+    """
+    Creates a nxn unit matrix.
+
+    Args:
+        - n -> the size of the square matrix.
+    Returns:
+        - A nxn unit matrix.
+    Raises:
+        - `TypeError` -> if n is not an integer.
+        - `MatrixDimensionError` -> if n is less than 1.
+    """
+
+    if not isinstance(n, int):
+        raise TypeError("Matrix dimension must be an integer.")
+    if n < 1:
+        raise MatrixDimensionError("Matrix dimension must be greater than zero.")
+
+    new = Matrix(n, n)
+    array = new._array
+    for i in range(n):
+        array[i][i] = 1
+
+    return new
 
