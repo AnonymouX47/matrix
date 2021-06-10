@@ -225,15 +225,19 @@ class MatrixIter:
 
     def __next__(self):
         if self.__size != self.__matrix.size:
-            raise MatrixResizeError("The matrix was resized during iteration.",
+            raise BrokenMatrixView("The matrix was resized during iteration.",
                                     view_obj=self)
 
         return next(self.__iter)  # StopIteration is also propagated.
 
 
-class MatrixResizeError(RuntimeError):
+class MatrixException(Exception):
+    """Baseclass of matrix exceptions."""
+
+
+class BrokenMatrixView(MatrixException, RuntimeError):
     """
-    The exception raised for errors related to resizing a matrix.
+    Raised for errors related to resizing a matrix.
     It's just for the sake of specificity (e.g during error-handling).
 
     Args:
@@ -247,9 +251,9 @@ class MatrixResizeError(RuntimeError):
         self.obj = view_obj
 
 
-class MatrixDimensionError(ValueError):
+class InvalidDimension(MatrixException, ValueError):
     """
-    The exception raised for errors related to incorrect or incompatible
+    Raised for errors related to incorrect or incompatible
     matrix dimensions.
 
     Args:
@@ -260,4 +264,17 @@ class MatrixDimensionError(ValueError):
     def __init__(self, *args, matrices=None):
         super().__init__(*args)
         self.matrices = matrices
+
+
+class ZeroDeterminant(MatrixException, ArithmeticError):
+    """
+    Raised when a matrix of non-zero determinant is required.
+
+    Args:
+        - matrix -> The matrix with zero determinant that triggered the exception.
+    """
+
+    def __init__(self, *args, matrix):
+        super().__init__(*args)
+        self.matrix = matrix
 

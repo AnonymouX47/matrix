@@ -6,7 +6,7 @@ from operator import add, mul, truediv, sub
 
 from .elements import Element
 from ..utils import (display_adj_slice, mangled_attr, slice_length,
-                    valid_container, MatrixResizeError
+                    valid_container, BrokenMatrixView
                     )
 
 @mangled_attr(_set=False, _del=False)
@@ -56,7 +56,7 @@ class RowsColumnsSlice:
         """
 
         if self.__size_hash != hash(self.__matrix.size):
-            raise MatrixResizeError("The matrix has been resized after"
+            raise BrokenMatrixView("The matrix has been resized after"
                                     f" this matrix-view ({self!r}) was created.",
                                     view_obj=self)
 
@@ -199,7 +199,7 @@ class RowColumn:
         """
 
         if self.__size_hash != hash(self.__matrix.size):
-            raise MatrixResizeError("The matrix has been resized after"
+            raise BrokenMatrixView("The matrix has been resized after"
                                     f" this matrix-view ({self!r}) was created.",
                                     view_obj=self)
 

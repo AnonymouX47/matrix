@@ -46,7 +46,7 @@ class Matrix:
                 self.__array = [[Element(0)] * cols for _ in range(rows)]
                 self.__nrow, self.__ncol = rows, cols
             else:
-                raise MatrixDimensionError(
+                raise InvalidDimension(
                         "Matrix dimensions must be greater than zero.")
         elif is_iterable(rows_array) and isinstance(cols_zfill, (type(None), bool)):
             minlen, maxlen, self.__nrow, array = valid_2D_iterable(rows_array)
@@ -213,7 +213,7 @@ class Matrix:
                 r_c = (yield row[c])
 
                 if size != self.size:
-                    raise MatrixResizeError(
+                    raise BrokenMatrixView(
                                         "The matrix was resized during iteration.",
                                         view_obj=self)
 
@@ -288,7 +288,7 @@ class Matrix:
             return NotImplemented
 
         if self.size != other.size:
-            raise MatrixDimensionError(
+            raise InvalidDimension(
                     "The matrices must be of equal size for `+`.",
                     matrices=(self, other)
                     )
@@ -310,7 +310,7 @@ class Matrix:
             return NotImplemented
 
         if self.size != other.size:
-            raise MatrixDimensionError(
+            raise InvalidDimension(
                     "The matrices must be of equal size for `-`.",
                     matrices=(self, other)
                     )
@@ -359,7 +359,7 @@ class Matrix:
             return NotImplemented
 
         if not self.is_conformable(self, other):
-            raise MatrixDimensionError(
+            raise InvalidDimension(
                     "The matrices are not conformable in the given order",
                     matrices=(self, other)
                     )
@@ -410,7 +410,7 @@ class Matrix:
         """Matrix Inverse"""
 
         if self.__nrow != self.__ncol:
-            raise MatrixDimensionError(
+            raise InvalidDimension(
                     "This matrix in non-square, hence has no inverse.",
                     matrices=(self,)
                     )
@@ -436,9 +436,11 @@ class Matrix:
             for i in range(nrow):
                 rows[i+1] /= array[i][i]
 
-        except (decimal.DivisionByZero, decimal.DivisionUndefined):
-            raise ValueError("The determinant of this matrix is zero,"
-                            " hence has no inverse.") from None
+        except (decimal.DivisionByZero, decimal.InvalidOperation) as err:
+            raise ZeroDeterminant(
+                    "The determinant of this matrix is zero, hence has no inverse.",
+                    matrix=self
+                    ) from None
 
         inverse = augmented[:, nrow+1:]
         # Due to floating-point limitations
@@ -452,7 +454,7 @@ class Matrix:
         if not isinstance(other, __class__):
             return Notimplemented
         if self.__nrow != other.__nrow:
-            raise MatrixDimensionError(
+            raise InvalidDimension(
                     "The number of rows the matrices must be equal.")
 
         new = self.copy()
@@ -491,7 +493,7 @@ class Matrix:
         """Determinant of the matrix."""
 
         if self.__nrow != self.__ncol:
-            raise MatrixDimensionError(
+            raise InvalidDimension(
                     "This matrix in non-square, hence has no determinant.",
                     matrices=(self,)
                     )
@@ -503,7 +505,7 @@ class Matrix:
         """Principal diagonal of the matrix."""
 
         if self.__nrow != self.__ncol:
-            raise MatrixDimensionError("The matrix is not square.",
+            raise InvalidDimension("The matrix is not square.",
                                         matrices=(self,)
                                         )
 
@@ -518,7 +520,7 @@ class Matrix:
         """Returns the minor of element at [i, j]"""
 
         if self.__nrow != self.__ncol:
-            raise MatrixDimensionError(
+            raise InvalidDimension(
                     "This matrix in non-square, hence it's elements have no minors.",
                     matrices=(self,)
                     )
@@ -951,13 +953,13 @@ def unit_matrix(n: int):
         - A nxn unit matrix.
     Raises:
         - `TypeError` -> if n is not an integer.
-        - `MatrixDimensionError` -> if n is less than 1.
+        - `InvalidDimension` -> if n is less than 1.
     """
 
     if not isinstance(n, int):
         raise TypeError("Matrix dimension must be an integer.")
     if n < 1:
-        raise MatrixDimensionError("Matrix dimension must be greater than zero.")
+        raise InvalidDimension("Matrix dimension must be greater than zero.")
 
     new = Matrix(n, n)
     array = new._array

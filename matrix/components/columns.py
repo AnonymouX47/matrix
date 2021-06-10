@@ -71,7 +71,7 @@ class Columns(RowsColumns):
         if isinstance(sub, int):
             if 0 < sub <= self.__matrix.__ncol:
                 if self.__matrix.__ncol == 1:
-                    raise MatrixDimensionError("Emptying the matrix isn't allowed.",
+                    raise InvalidDimension("Emptying the matrix isn't allowed.",
                                                 matrices=(self.__matrix,))
                 sub -= 1
                 for row in self.__matrix.__array:
@@ -83,7 +83,7 @@ class Columns(RowsColumns):
         elif isinstance(sub, slice):
             sub = adjust_slice(sub, self.__matrix.ncol)
             if (diff := slice_length(sub)) == self.__matrix.ncol:
-                raise MatrixDimensionError("Emptying the matrix isn't allowed.")
+                raise InvalidDimension("Emptying the matrix isn't allowed.")
             for row in self.__matrix._array:
                 del row[sub]
             self.__matrix.__ncol -= diff
