@@ -191,6 +191,14 @@ class RowColumn:
 
         return NotImplemented
 
+    def __bool__(self):
+        """
+        Returns `False` if all elements in the row/column are zeros
+        and `True` otherwise.
+        """
+
+        return any(self._fast_iter())
+
 
     def __validity_check(self):
         """

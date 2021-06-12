@@ -58,6 +58,7 @@ This is just an outline of the major features of the library. For detailed expla
 * Inverse
 * Transpose
 * Augmentation
+* Row reduction
 
 ### Checks for matrix properties and special matrices
 * Diagonality

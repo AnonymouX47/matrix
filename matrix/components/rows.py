@@ -245,3 +245,16 @@ class Row(RowColumn):
 
             return lhs == rhs
 
+
+    # Explicit operations
+
+    def pivot_index(self):
+        """Returns the index of the pivot (first non-zero) element of the row."""
+
+        for i, elem in enumerate(self.__matrix._array[self.__index], 1):
+            if elem: break
+        else:
+            return 0  # Zero row.
+
+        return i
+

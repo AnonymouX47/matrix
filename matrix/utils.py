@@ -161,7 +161,7 @@ def mangled_attr(*, _get=True, _set=True, _del=True):
     NOTE:
     - The method applied is not perfect and can give unwanted results if
     the name of the class from whose definition the attribute is referenced
-    has at least a set of double underscores in-between.
+    has at least a set of double underscores in-between, which is not expected.
     - This functionality comes at a slight cost, so if a mangled attribute has
     an **un-mangled** counterpart (probably a [read-only] descriptor),
     that should be used instead, whenever possible.

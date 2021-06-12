@@ -8,7 +8,7 @@ from operator import add, itemgetter, mul, sub
 from .components import *
 from .utils import *
 
-__all__ = ("Matrix",)
+__all__ = ("Matrix", "unit_matrix")
 
 @mangled_attr(_del=False)
 class Matrix:
@@ -417,30 +417,23 @@ class Matrix:
 
         augmented = self | unit_matrix(self.__nrow)
         array = augmented.__array
-        rows = augmented.__rows
         nrow = augmented.__nrow
 
-        try:  # Forgiveness is way less costly
+        augmented.reduce_lower_tri()
 
-            # Reduce lower triangle of `self`
-            for j in range(nrow):
-                for i in range(j+1, nrow):
-                    rows[i+1] -= rows[j+1] * (array[i][j] / array[j][j])
-
-            # Reduce upper triangle of `self`
-            for j in range(nrow-1, 0, -1):
-                for i in range(j-1, -1, -1):
-                    rows[i+1] -= rows[j+1] * (array[i][j] / array[j][j])
-
-            # Reduce diagonal elements of `self` to ones
-            for i in range(nrow):
-                rows[i+1] /= array[i][i]
-
-        except (decimal.DivisionByZero, decimal.InvalidOperation) as err:
+        if not all(array[i][i] for i in range(nrow)):
             raise ZeroDeterminant(
-                    "The determinant of this matrix is zero, hence has no inverse.",
-                    matrix=self
-                    ) from None
+            "The determinant of this matrix is zero, hence it's non-invertible.",
+            matrix=self
+            ) from None
+
+        augmented.reduce_upper_tri(as_square=True)
+
+        # Reduce diagonal elements of original matrix to ones
+        for i in range(nrow):
+            d_i = array[i][i]
+            # Avoids having `-0` as elements.
+            array[i] = [x / d_i if x else Element(0) for x in array[i]]
 
         inverse = augmented[:, nrow+1:]
         # Due to floating-point limitations
@@ -498,7 +491,15 @@ class Matrix:
                     matrices=(self,)
                     )
 
-        return _det(self)
+        matrix = self.copy()
+        matrix.reduce_lower_tri()
+        array = matrix.__array
+
+        det = prod([array[i][i] for i in range(matrix.__nrow)])
+
+        return (Element(round(det))
+                if abs(det - round(det)) < Element("1e-12")
+                else det)
 
     @property
     def diagonal(self):
@@ -506,10 +507,11 @@ class Matrix:
 
         if self.__nrow != self.__ncol:
             raise InvalidDimension("The matrix is not square.",
-                                        matrices=(self,)
-                                        )
+                                    matrices=(self,)
+                                    )
+        array = self.__array
 
-        return [self.__array[i][i] for i in range(self.__nrow)]
+        return [array[i][i] for i in range(self.__nrow)]
 
 
     # Explicit Operations
@@ -529,7 +531,7 @@ class Matrix:
         del submatrix.__rows[i]
         del submatrix.__columns[j]
 
-        return _det(submatrix)
+        return submatrix.determinant
 
     def itranspose(self):
         """Transposes the matrix **in-place**,"""
@@ -556,11 +558,29 @@ class Matrix:
 
         if self.__ncol >= self.__nrow:
             array = self.__array
-            rows = self.__rows
             nrow = self.__nrow
-            for j in range(nrow):
+
+            for j in range(nrow-1):
+                if not array[j][j]:
+                    if not any(array[j][j+1:]):
+                        # If j is a zero row, move to the bottom
+                        array.insert(nrow, array.pop(j))
+                    else:
+                        for k in range(j+1, nrow):
+                            if array[k][j]:
+                                # Move row k+1 **above** row j+1 since it has
+                                # a non-zero element on that same column j+1.
+                                # There can never exist a row **below** row j+1
+                                # that has a non-zero element **before** column j+1.
+                                array.insert(j, array.pop(k))
+                                break
+                        else:  # All zeros **below** the diagonal element
+                            continue
                 for i in range(j+1, nrow):
-                    rows[i+1] -= rows[j+1] * (array[i][j] / array[j][j])
+                    # Row operation is redundant if array[i][j] is zero
+                    if array[i][j]:
+                        mult = array[i][j] / array[j][j]
+                        array[i] = [x - y*mult for x, y in zip(array[i], array[j])]
         else:
             self.flip_x(); self.flip_y()
             self.reduce_upper_tri()
@@ -580,25 +600,40 @@ class Matrix:
             Useful in cases of augmented matrices, for example.
         """
 
-        if as_square:
+        if self.__nrow >= self.__ncol or as_square:
             array = self.__array
-            rows = self.__rows
             min_dim = min(self.__nrow, self.__ncol)
+
             for j in range(min_dim-1, 0, -1):
+                if not array[j][j]:
+                    if not any(array[j][:j]):
+                        # If j is a zero row, move to the top
+                        array.insert(0, array.pop(j))
+                    else:
+                        for k in range(j-1, -1, -1):
+                            if array[k][j]:
+                                # Move row k+1 **below** row j+1 since it has
+                                # a non-zero element on that same column j+1.
+                                # There can never exist a row **above** row j+1
+                                # that has a non-zero element **after** column j+1.
+                                # Note that the every row below k+1 (including j+1)
+                                # would've moved up an index after popping row k+1.
+                                array.insert(j, array.pop(k))
+                                break
+                        else:  # All zeros **above** the diagonal element
+                            continue
                 for i in range(j-1, -1, -1):
-                    rows[i+1] -= rows[j+1] * (array[i][j] / array[j][j])
-        elif self.__nrow >= self.__ncol:
-            array = self.__array
-            rows = self.__rows
-            for j in range(self.__ncol-1, 0, -1):
-                for i in range(j-1, -1, -1):
-                    rows[i+1] -= rows[j+1] * (array[i][j] / array[j][j])
+                    # Row operation is redundant if array[i][j] is zero
+                    if array[i][j]:
+                        mult = array[i][j] / array[j][j]
+                        array[i] = [x - y*mult for x, y in zip(array[i], array[j])]
         else:
             self.flip_x(); self.flip_y()
             self.reduce_lower_tri()
             self.flip_x(); self.flip_y()
 
         self.__round(12)
+
 
     ## Other operations
 
@@ -716,11 +751,11 @@ class Matrix:
         NOTE: Meant for internal use only.
         """
 
-        self.__array = [[Element(round(x))
-                                if abs(x - round(x)) < Element(f"1e-{ndigits}")
-                                else x
-                            for x in row]
-                        for row in self.__array]
+        self.__array[:] = [[Element(round(x))
+                                    if abs(x - round(x)) < Element(f"1e-{ndigits}")
+                                    else x
+                                for x in row]
+                            for row in self.__array]
 
 
     ## Matrix Properties
@@ -881,69 +916,6 @@ Matrix._register(Rows, Columns)
 
 
 # Utility functions
-
-def _det(matrix):
-    # NOTE: The commented code were intentionally left here for any possible
-    # debugging purposes in the future (probably by anyone testing or reviewing)
-
-    # print (matrix)
-    array = matrix._array
-
-    if matrix.nrow == 1:
-        return array[0][0]
-    if matrix.nrow == 2:
-        determinant = array[0][0] * array[1][1] - array[0][1] * array[1][0]
-        # print(f"det={determinant}")
-        return determinant
-
-    if matrix.is_triangular():
-        determinant = prod([array[i][i] for i in range(matrix.nrow)])
-        # print(f"det={determinant}")
-        return determinant
-
-    columns = matrix.columns  # More efficient than converting to nested lists, tested.
-    most_sparse_row = max(range(matrix.nrow),
-                            key=lambda row: array[row].count(0))
-    most_sparse_col = max(range(1, matrix.ncol+1),
-                            key=lambda col: columns[col][:].count(0))
-
-    determinant = 0
-
-    if (columns[most_sparse_col][:].count(0)
-        > array[most_sparse_row].count(0)):  # Use column
-
-        j = most_sparse_col  # No `+1` since already 1-indexed above
-        # print("Column", j, columns[j][:])
-        if not any(columns[j]):
-            # print(matrix)
-            # print("det=0")
-            return Element(0)
-        sign = (-1) ** (1+j)  # i=1
-        for i, elem in enumerate(columns[j], 1):
-            # print(f"{i=}, {j=}, {sign=}, {elem=:g}")
-            if elem != 0:
-                determinant += sign * elem * matrix.minor(i, j)
-            sign *= -1
-
-    else:  # Prefer row when zero-counts are equal
-
-        i = most_sparse_row + 1  # `+1` since matrices are 1-indexed
-        # print("Row", i, array[i-1])
-        if not any(array[i-1]):
-            # print(matrix)
-            # print("det=0")
-            return Element(0)
-        sign = (-1) ** (i+1)  # j=1
-        for j, elem in enumerate(array[i-1], 1):
-            # print(f"{i=}, {j=}, {sign=}, {elem=:g}")
-            if elem != 0:
-                determinant += sign * elem * matrix.minor(i, j)
-            sign *= -1
-
-    # print(matrix)
-    # print(f"det={determinant}")
-    return determinant
-
 
 def unit_matrix(n: int):
     """
