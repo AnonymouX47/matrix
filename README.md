@@ -57,6 +57,7 @@ This is just an outline of the major features of the library. For detailed expla
 * Division (by scalar)
 * Inverse
 * Transpose
+* Augmentation
 
 ### Checks for matrix properties and special matrices
 * Diagonality

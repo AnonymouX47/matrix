@@ -134,43 +134,108 @@ def is_iterable(obj):
 
 def mangled_attr(*, _get=True, _set=True, _del=True):
     """
-    Enables other classes to get, set and delete attributes with **mangled names**,
-    defined in decorated classes this class, using the unmangled name.
+    Enables other classes to get, set and delete attributes having
+    **mangled names** (defined in decorated classes), using the unmangled name.
 
-    - Only works if the attribute is referenced within a class definition.
-    - Works recursively for classes decorated with this function i.e
+    Args:
+        The arguments that are true determine which methods will be decorated.
+        Hence, which operations will be affected.
+
+    Returns:
+        a class decorator.
+
+    - The other classes accessing the attributes must be decorated with or passed to
+    the `_register` method of the class decorated with this function.
+      - even subclasses of the class defining the attributes must be decorated
+      with this method in order to access the mangled attributes.
+    - Only works if the attribute is referenced within the other class's definition.
+    - Works "recursively" for classes decorated with this function i.e
       - if class A is decorated by this function, and
-      - B is a subclass of A and also decorated by this function
+      - B is a subclass of A and also decorated with this function
       - then, mangled attributes of both B and A can be directly accessed via
-        an instance of B from within another class definition.
+        an instance of B from within another class's definition.
       - etc...
+    - Subclasses of the decorated class don't inherit this functionality,
+    hence they must also be decorated with this function if desired.
 
-    The parameters that are true determine which methods will be decorated.
-    Hence, which operations will be affected.
-
-    Returns a class decorator.
-
-    NOTE: The method applied is not perfect and can give unwanted results if:
-    - The name of the class from within which the attribute is referenced
-      has at least 2 underscores in-between.
+    NOTE:
+    - The method applied is not perfect and can give unwanted results if
+    the name of the class from whose definition the attribute is referenced
+    has at least a set of double underscores in-between.
+    - This functionality comes at a slight cost, so if a mangled attribute has
+    an **un-mangled** counterpart (probably a [read-only] descriptor),
+    that should be used instead, whenever possible.
     """
 
     def deco(cls):
-        name = cls.__name__
-        if _get: cls.__getattribute__ = retry_mangled(cls.__getattribute__, name)
-        if _set: cls.__setattr__ = retry_mangled(cls.__setattr__, name)
-        if _del: cls.__delattr__ = retry_mangled(cls.__delattr__, name)
+        """
+        Overrides the getter, setter and/or deletter of cls and adds
+        two extra attributes to the class:
+          - '_regster' -> A class method used to register other classes that
+          access the mangled attributes.
+          - '_registered' -> A set containing (modified) names of registered classes.
+
+        Args:
+            - cls -> The class to be decorated.
+        Returns:
+            The argument.
+        """
+
+        if _get: cls.__getattribute__ = retry_mangled(cls, cls.__getattribute__)
+        if _set: cls.__setattr__ = retry_mangled(cls, cls.__setattr__)
+        if _del: cls.__delattr__ = retry_mangled(cls, cls.__delattr__)
+
+        if any((_get, _set, _del)):
+
+            def _register(cls, *othercls):
+                """
+                Registers a/some class(es) for "re-mangling"
+                of mangled attributes of _cls_ instances referenced within
+                the definition of the other class(es).
+
+                Args:
+                    - cls -> Owner of the method.
+                    - othercls -> The class/classes (in a tuple) to be registered.
+                Returns:
+                    The last argument or None if no argument was passed.
+                Raises:
+                    TypeError if an argument is not a class object.
+
+                Note: It is to be set as a classmethod of the class (_cls_) having
+                the attriutes with mangled names, hence can be used thus:
+                    - with `@cls._register` in definition of another class
+                    that accesses those attributes.
+                    - Direct call to `cls._register(class1, ...)`
+                    this way, it can accept multiple of the other classes at once.
+                """
+
+                for other in othercls:
+                    if not isinstance(other, type):
+                        raise TypeError("Only classes can be registered.")
+
+                    # Leading underscores of the class name is stripped in mangled names.
+                    cls._registered.add('_' + other.__name__.lstrip('_'))
+
+                # Avoids an UnboundLocalError if no argument is given
+                return other if othercls else None
+
+            _register.__qualname__ = cls.__qualname__ + '._register'
+            _register.__module__ = cls.__module__
+
+            cls._register = classmethod(_register)
+            cls._registered = set()
 
         return cls
 
     return deco
 
+def retry_mangled(cls, get_set_del):
+    """
+    Decorates the getter, setter or deleter of _cls_ to retry for mangled names
+    after "re-mangling" the attribute name with the name of _cls_.
+    """
 
-def retry_mangled(get_set_del, cls_name):
-    """
-    Decorates a getter, setter or deleter to retry for mangled names,
-    after "re-mangling" the attribute name with 'cls_name'.
-    """
+    cls_name = cls.__name__
 
     @wraps(get_set_del)
     def wrapper(self, name, *args):
@@ -179,10 +244,9 @@ def retry_mangled(get_set_del, cls_name):
             return get_set_del(self, name, *args)
         except AttributeError as err:
             split = name.split('__', 1)
-            if (len(split) == 2 and split[0].startswith('_')):
-                name = "_%s__%s" % (cls_name, split[1])
+            if (len(split) == 2 and split[0] in cls._registered):
                 try:
-                    return get_set_del(self, name, *args)
+                    return get_set_del(self, "_%s__%s" % (cls_name, split[1]), *args)
                 except AttributeError:
                     raise err from None
             raise

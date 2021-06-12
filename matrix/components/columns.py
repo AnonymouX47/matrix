@@ -10,6 +10,7 @@ from .elements import to_Element
 
 __all__ = ("Columns",)
 
+@RowsColumns._register
 class Columns(RowsColumns):
     """A (pseudo-container) view over the columns of a matrix."""
 
@@ -69,12 +70,12 @@ class Columns(RowsColumns):
         """
 
         if isinstance(sub, int):
-            if 0 < sub <= self.__matrix.__ncol:
-                if self.__matrix.__ncol == 1:
+            if 0 < sub <= self.__matrix.ncol:
+                if self.__matrix.ncol == 1:
                     raise InvalidDimension("Emptying the matrix isn't allowed.",
-                                                matrices=(self.__matrix,))
+                                            matrices=(self.__matrix,))
                 sub -= 1
-                for row in self.__matrix.__array:
+                for row in self.__matrix._array:
                     del row[sub]
                 self.__matrix.__ncol -= 1
             else:
@@ -99,6 +100,7 @@ class Columns(RowsColumns):
                 self.__matrix)
 
 
+@RowsColumnsSlice._register
 class ColumnsSlice(RowsColumnsSlice):
     """
     A (pseudo-container) view over a slice of the colums of a matrix.
@@ -140,6 +142,7 @@ class ColumnsSlice(RowsColumnsSlice):
                         self.__matrix)
 
 
+@RowColumn._register
 class Column(RowColumn):
     """
     A single column of a matrix.

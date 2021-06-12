@@ -10,6 +10,7 @@ from .elements import to_Element
 
 __all__ = ("Rows",)
 
+@RowsColumns._register
 class Rows(RowsColumns):
     """A (pseudo-container) view over the rows of a matrix."""
 
@@ -67,11 +68,11 @@ class Rows(RowsColumns):
         """
 
         if isinstance(sub, int):
-            if 0 < sub <= self.__matrix.__nrow:
-                if self.__matrix.__nrow == 1:
+            if 0 < sub <= self.__matrix.nrow:
+                if self.__matrix.nrow == 1:
                     raise InvalidDimension("Emptying the matrix isn't allowed.",
-                                                matrices=(self.__matrix,))
-                del self.__matrix.__array[sub-1]
+                                            matrices=(self.__matrix,))
+                del self.__matrix._array[sub-1]
                 self.__matrix.__nrow -= 1
             else:
                 raise IndexError("Index out of range.")
@@ -93,6 +94,7 @@ class Rows(RowsColumns):
                     self.__matrix)
 
 
+@RowsColumnsSlice._register
 class RowsSlice(RowsColumnsSlice):
     """
     A (pseudo-container) view over a slice of the rows of a matrix.
@@ -130,10 +132,11 @@ class RowsSlice(RowsColumnsSlice):
         self.__validity_check()
 
         return MatrixIter(map(partial(Row, self.__matrix),
-                                range(*self.__slice.indices(self.__slice.stop))),
+                                    range(*self.__slice.indices(self.__slice.stop))),
                             self.__matrix)
 
 
+@RowColumn._register
 class Row(RowColumn):
     """
     A single row of a matrix.

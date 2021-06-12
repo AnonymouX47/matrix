@@ -876,6 +876,8 @@ class Matrix:
 
         return lhs.__ncol == rhs.__nrow
 
+# Register classes that access Matrix attributes with mangled names.
+Matrix._register(Rows, Columns)
 
 
 # Utility functions
