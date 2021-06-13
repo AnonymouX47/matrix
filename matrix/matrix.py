@@ -186,14 +186,14 @@ class Matrix:
                     "Matrixes only support subscription of elements or submatrices.")
         else:
             raise TypeError(
-                "Subscript element must be a tuple of integers or slices\n"
-                "\t(with or without parenthesis).") from None
+                "Subscript element must be a tuple of integers or slices"
+                " (with or without parenthesis).") from None
 
 
     def __iter__(self):
         """
         Returns a generator that yields the *elements* of the matrix.
-        Raises a `RuntimeError` if the matrix is resized during iteration.
+        Raises a `BrokenMatrixView` if the matrix is resized during iteration.
 
         The generator can be set to any vaild row and column of the matrix
         from which to continue iteration using the send() method.
@@ -215,8 +215,8 @@ class Matrix:
 
                 if size != self.size:
                     raise BrokenMatrixView(
-                                        "The matrix was resized during iteration.",
-                                        view_obj=self)
+                                    "The matrix was resized during iteration.",
+                                    view_obj=self)
 
                 if r_c:
                     if isinstance(r_c, tuple) and len(r_c) == 2:
@@ -403,7 +403,8 @@ class Matrix:
         if exp == -1: return ~self
 
         new = self.copy()
-        for _ in range(exp - 1): new @= self
+        # Delibrately didn't use in-place multiplaction or augmented assignment
+        for _ in range(exp - 1): new = new.__matmul__(self)
 
         return new
 
@@ -457,6 +458,60 @@ class Matrix:
         new.__ncol += other.__ncol
 
         return new
+
+    ## In-place Operations
+    ##
+    ## These ensure the matrix object (and its underlying list object)
+    ## remain unchanged.
+
+    def __iadd__(self, other):
+        if (result := self.__add__(other)) is not NotImplemented:
+            self.__array[:] = result.__array
+            return self
+
+        return result
+
+    def __isub__(self, other):
+        if (result := self.__sub__(other)) is not NotImplemented:
+            self.__array[:] = result.__array
+            return self
+
+        return result
+
+    def __imul__(self, other):
+        if (result := self.__mul__(other)) is not NotImplemented:
+            self.__array[:] = result.__array
+            return self
+
+        return result
+
+    def __imatmul__(self, other):
+        if (result := self.__matmul__(other)) is not NotImplemented:
+            self.__array[:] = result.__array
+            return self
+
+        return result
+
+    def __itruediv__(self, other):
+        if (result := self.__truediv__(other)) is not NotImplemented:
+            self.__array[:] = result.__array
+            return self
+
+        return result
+
+    def __ipow__(self, other):
+        if (result := self.__pow__(other)) is not NotImplemented:
+            self.__array[:] = result.__array
+            return self
+
+        return result
+
+    def __ior__(self, other):
+        if (result := self.__or__(other)) is not NotImplemented:
+            self.__array[:] = result.__array
+            return self
+
+        return result
 
 
     # Properties
@@ -710,7 +765,7 @@ class Matrix:
                 self.__array.extend([[Element(0)] * self.__ncol] * diff)
             elif diff < 0:
                 # Delete the last `-diff` rows (**in-place**).
-                self.__array[:] = self.__array[:diff]
+                self.__array[diff:] = []
             self.__nrow = nrow
 
         # Number of columns
@@ -728,7 +783,7 @@ class Matrix:
                 for row in self.__array: row.extend([Element(0)] * diff)
             elif diff < 0:
                 # Delete the last `-diff` elements in each row (**in-place**).
-                for row in self.__array: row[:] = row[:diff]
+                for row in self.__array: row[diff:] = []
             self.__ncol = ncol
         elif pad_rows:
             raise ValueError("Number of columns not specified for padding.")
@@ -747,13 +802,15 @@ class Matrix:
 
     def __round(self, ndigits):
         """
-        Rounds the elements of the matrix that should normally be integers, in-place.
+        Rounds the elements of the matrix that should normally be integers,
+        **in-place**.
 
         NOTE: Meant for internal use only.
         """
 
+        limit = Element(f"1e-{ndigits}")
         self.__array[:] = [[Element(round(x))
-                                    if abs(x - round(x)) < Element(f"1e-{ndigits}")
+                                    if abs(x - round(x)) < limit
                                     else x
                                 for x in row]
                             for row in self.__array]
@@ -911,6 +968,7 @@ class Matrix:
             raise TypeError("Only matrices can be tested for conformability.")
 
         return lhs.__ncol == rhs.__nrow
+
 
 # Register classes that access Matrix attributes with mangled names.
 Matrix._register(Rows, Columns)
