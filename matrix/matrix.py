@@ -72,12 +72,13 @@ class Matrix:
 
 
     def __repr__(self):
-        return f"<{type(self).__name__}{self.size} at {id(self):#x}>"
+
+        return (f"<{self.__nrow}x{self.__ncol} "
+                f"{type(self).__name__} at {id(self):#x}>")
 
     def __str__(self):
-        """
-        Element with longest str() in a column determines that column's width.
-        """
+
+        # Element with longest str() in a column determines that column's width.
 
         # Format each element
         rows_strs = [["%.4g" % element for element in row] for row in self.__array]

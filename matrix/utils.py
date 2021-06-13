@@ -163,17 +163,19 @@ def mangled_attr(*, _get=True, _set=True, _del=True):
     the name of the class from whose definition the attribute is referenced
     has at least a set of double underscores in-between, which is not expected.
     - This functionality comes at a slight cost, so if a mangled attribute has
-    an **un-mangled** counterpart (probably a [read-only] descriptor),
-    that should be used instead, whenever possible.
+    an **un-mangled** counterpart (e.g a [read-only] descriptor),
+    that should be used **in the other classes** instead, whenever possible.
     """
 
     def deco(cls):
         """
         Overrides the getter, setter and/or deletter of cls and adds
-        two extra attributes to the class:
-          - '_regster' -> A class method used to register other classes that
+        two extra attributes to the class (provided at least one of
+        the methods is overriden):
+          - '_register' -> A class method used to register other classes that
           access the mangled attributes.
-          - '_registered' -> A set containing (modified) names of registered classes.
+          - '_registered' -> A set containing (modified) names of registered
+          classes.
 
         Args:
             - cls -> The class to be decorated.
@@ -181,9 +183,38 @@ def mangled_attr(*, _get=True, _set=True, _del=True):
             The argument.
         """
 
-        if _get: cls.__getattribute__ = retry_mangled(cls, cls.__getattribute__)
-        if _set: cls.__setattr__ = retry_mangled(cls, cls.__setattr__)
-        if _del: cls.__delattr__ = retry_mangled(cls, cls.__delattr__)
+        def retry_mangled(get_set_del):
+            """
+            Decorates the getter, setter or deleter of _cls_ to retry for mangled names
+            after "re-mangling" the attribute name with the name of _cls_.
+            """
+
+            cls_name = cls.__name__
+
+            @wraps(get_set_del)
+            def wrapper(self, name, *args):
+                # 'args' is only occupied for set operations.
+                try:
+                    return get_set_del(self, name, *args)
+                except AttributeError as err:
+                    split = name.split('__', 1)
+                    if (len(split) == 2 and split[0] in cls._registered):
+                        try:
+                            return get_set_del(
+                                            self,
+                                            "_%s__%s" % (cls_name, split[1]),
+                                            *args
+                                            )
+                        except AttributeError:
+                            raise err from None
+                    raise
+
+            return wrapper
+
+
+        if _get: cls.__getattribute__ = retry_mangled(cls.__getattribute__)
+        if _set: cls.__setattr__ = retry_mangled(cls.__setattr__)
+        if _del: cls.__delattr__ = retry_mangled(cls.__delattr__)
 
         if any((_get, _set, _del)):
 
@@ -228,30 +259,6 @@ def mangled_attr(*, _get=True, _set=True, _del=True):
         return cls
 
     return deco
-
-def retry_mangled(cls, get_set_del):
-    """
-    Decorates the getter, setter or deleter of _cls_ to retry for mangled names
-    after "re-mangling" the attribute name with the name of _cls_.
-    """
-
-    cls_name = cls.__name__
-
-    @wraps(get_set_del)
-    def wrapper(self, name, *args):
-        # 'args' is only occupied for set operations.
-        try:
-            return get_set_del(self, name, *args)
-        except AttributeError as err:
-            split = name.split('__', 1)
-            if (len(split) == 2 and split[0] in cls._registered):
-                try:
-                    return get_set_del(self, "_%s__%s" % (cls_name, split[1]), *args)
-                except AttributeError:
-                    raise err from None
-            raise
-
-    return wrapper
 
 
 class MatrixIter:
