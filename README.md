@@ -1,35 +1,40 @@
 # matrix
 
-A python library for matrix operations and manipulations.
+A python package for matrix operations and manipulations.
 
 ## Contents
 
 * [Back-Story](#back-story)
 * [Features](#features)
+* [Installation](#installation)
 * [Usage](#usage)
+* [Uninstallation](#uninstallation)
 * [TODO](#todo)
 
 ## Back-Story
 
-I had just completed my "Journey through the Docs", finished studying the Python aspect of the Python Docs (majorly the Library & Language Reference, wherever else those referred me to and whatever else i needed to fully understand) with interactive sessions, testing things out.
+I had just completed my "Journey through the Docs", finished studying the Core Python aspect of the Python Docs (majorly the Library & Language Reference, wherever else those referred me to and whatever else i needed to fully understand) with interactive sessions, testing things out and making notes.
 
 Then i needed something to put to (real) practice all the things i had learned.
 I wanted something purely **Standard** Python, no 3rd-party libraries and seemed this project would be a good place to start.
 
 The project was actually concieved in the course of my "Journey through the Docs" but only stayed on my TODO list till after.
 
-It's been interesting so far and the project actually turned out to incoparate a lot of what i learned... though, definitely not close to all. :smile:
+It's been interesting so far and the project actually turned out to incoparate a lot of what i learned... though, definitely not all. :smile:
 
 **NOTE:** This project is not intended to be a "re-invention of any wheel", it's basically just me practicing.
-I actually made sure i didn't test out or go through any other similar project, at least, till i had implemented all I originally planned to.
+I actually made sure i didn't test out or go through any similar project, till i had implemented all I originally planned to.
 
 ## Features
 
-This is just an outline of the major features of the library. For detailed explanation of the features, see the [documentation](docs/index.md).
+This is just an outline of the major features of the library. For detailed explanation of the features and some implementation details, see the [documentation](docs/index.md).
 
 ### Matrix initialization. Via:
-* Class constructor
-* ...
+* The class constructor
+* Utility functions to generate:
+  * Unit matrices.
+  * Matrices filled with random integer elements.
+  * Matrices filled with random floating-point elements.
 
 ### Matrix object interactions
 * Intelligent string representation
@@ -60,7 +65,7 @@ This is just an outline of the major features of the library. For detailed expla
 * Augmentation
 * Row reduction
 
-### Checks for matrix properties and special matrices
+### Tests for matrix properties and special matrices
 * Diagonality
 * Nullity
 * Orthogonality
@@ -100,18 +105,60 @@ These are views of the matrix object, like `.keys()` and `.values()` are to `dic
 * Matrix resize
 * Rounded comparison
 
+
+## Installation
+
+Download and unzip this [repository](https://github.com/AnonymouX47/matrix/archive/refs/heads/main.zip) or run
+```sh
+git clone https://github.com/AnonymouX47/matrix
+```
+
+Change your Working Directory to that of the repository; run
+```sh
+cd matrix
+```
+
+Then, run
+```sh
+python setup.py install
+```
+**NOTE:** For windows users, Python must've been added to PATH (For help, check [here](https://datatofish.com/add-python-to-windows-path/)).
+
+
 ## Usage
 
-...
+Quick example:
+```python
+>>> from matrix import Matrix
+>>> print(Matrix(4, 4))
+―――――――――――――――――
+| 0 | 0 | 0 | 0 |
+―――――――――――――――――
+| 0 | 0 | 0 | 0 |
+―――――――――――――――――
+| 0 | 0 | 0 | 0 |
+―――――――――――――――――
+| 0 | 0 | 0 | 0 |
+―――――――――――――――――
+```
+
+For more usage examples, check [samples](samples/).
+For the complete feature list and explanations, see [Features](docs/features.md).
+
+
+## Uninstallation
+To uninstall the package, run
+```sh
+pip uninstall matrix
+```
+
 
 ## TODO
 
-1. Solution to systems of linear equations (Coming up soon).
-3. Creating pre-filled matrices with ones, random numbers (integers or floats), optionally within a specified range, diagonal matrices, etc...
-4. Initializing matrices from STDIN or files.
-5. Implementation of methods to find eigenvalues and eigenvectors.
+1. Solution to systems of linear equations
+   - Though still currently possible i.e `x = ~A @ b`.
+2. Implementation of methods to find eigenvalues and eigenvectors.
    * This requires a polynomial "solver" (at least for the basic approach) and I plan to work on that.
-6. Probably Others...
 
 Please note that I personally **do NOT** plan to implement any "more efficient" algorithms for the matrix operations in this project. It's not the point of this project (at least, as of now) but contributions are welcome.
 
