@@ -246,6 +246,59 @@ class Row(RowColumn):
             return lhs == rhs
 
 
+    # In-place operations
+    # These modify the matrix directly
+
+    def __iadd__(self, other):
+        if (result := self.__add__(other)) is not NotImplemented:
+            self.__matrix.rows[self.__index + 1] = result
+            return self
+
+        return result
+
+    def __isub__(self, other):
+        if (result := self.__sub__(other)) is not NotImplemented:
+            self.__matrix.rows[self.__index + 1] = result
+            return self
+
+        return result
+
+    def __imul__(self, other):
+        if (result := self.__mul__(other)) is not NotImplemented:
+            self.__matrix.rows[self.__index + 1] = result
+            return self
+
+        return result
+
+    def __imatmul__(self, other):
+        if (result := self.__matmul__(other)) is not NotImplemented:
+            self.__matrix.rows[self.__index + 1] = result
+            return self
+
+        return result
+
+    def __itruediv__(self, other):
+        if (result := self.__truediv__(other)) is not NotImplemented:
+            self.__matrix.rows[self.__index + 1] = result
+            return self
+
+        return result
+
+    def __ipow__(self, other):
+        if (result := self.__pow__(other)) is not NotImplemented:
+            self.__matrix.rows[self.__index + 1] = result
+            return self
+
+        return result
+
+    def __ior__(self, other):
+        if (result := self.__or__(other)) is not NotImplemented:
+            self.__matrix.rows[self.__index + 1] = result
+            return self
+
+        return result
+
+
     # Explicit operations
 
     def pivot_index(self):

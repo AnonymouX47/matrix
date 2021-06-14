@@ -21,13 +21,20 @@ class Matrix:
 
     A matrix can be constructed in two ways:
     - Given two positive integers:
-      `Matrix(rows: int, cols: int)`
-      - initializes as a zero matrix of that dimension.
+      - `Matrix(rows: int, cols: int)`
+      - initializes as a null matrix of the given dimension.
 
     - Given a 2-D iterable of real numbers:
-      `Matrix(array: iterable, zfill: bool = False)`
-      - If all rows have the same length, initialized as if the array is row-major.
-      - If row lengths don't match but `zfill is True`, zero-fill to the right to match.
+      - `Matrix(array: iterable, zfill: bool = False)`
+      - If all rows have the same length, the matrix is initialized
+      taking the array in row-major order.
+      - If row lengths don't match but _zfill_ is `True`,
+      the rows of the resulting matrix are padded with zeros
+      to the right to match up.
+
+    NOTE: All in-place operations guarantee that the outer underlying
+    list object will not change in an instance's lifetime, though the nested
+    ones will, depending on the operation performed.
     """
 
     # mainly to disable abitrary atributes.
@@ -105,16 +112,15 @@ class Matrix:
         - element at given position, if `sub` is a tuple of integers `(row, col)`.
           e.g `matrix[1, 2]`
           - Indices must be in range
-          - Negative indices are not allowed.
         - a new Matrix instance, if `sub` is a tuple of slices.
           e.g `matrix[::2, 3:4]`
           - the first slice selects rows.
           - the second slice selects columns.
           - any 'stop' out of range is "forgiven".
-          - Negative indices or steps are not allowed.
+          - any 'step' less than 1 is not allowed.
 
         NOTE:
-          - Both Row and Column are **indexed starting from `1`**.
+          - Both rows and columns are **indexed starting from `1`**.
           - A **slice includes `stop`**.
         """
 
@@ -238,6 +244,7 @@ class Matrix:
         if not isinstance(item, (Decimal, Real)):
             raise TypeError("Matrix elements are only real numbers.")
 
+        item = to_Element(item)
         return any(item in row for row in self.__array)
 
     def __round__(self, ndigits=None):

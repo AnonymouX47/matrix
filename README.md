@@ -55,6 +55,7 @@ This is just an outline of the major features of the library. For detailed expla
 * Trace
 
 ### Matrix Operations
+* Negation
 * Equality comparison
 * Addition and subtraction
 * Scalar multiplication
@@ -142,23 +143,32 @@ Quick example:
 ―――――――――――――――――
 ```
 
-For more usage examples, check [samples](samples/).
-For the complete feature list and explanations, see [Features](docs/features.md).
+For more usage examples, check the [samples](samples/).
+
+For the complete feature list and descriptions, see [Features](docs/features.md).
 
 
 ## Uninstallation
+
 To uninstall the package, run
 ```sh
 pip uninstall matrix
 ```
 
 
+## Contributing
+
+If you find any bug or have any suggestion for an improvement, please open an **Issue** in the [Issues section](https://github.com/AnonymouX47/matrix/issues), they're greatly welcomed.
+
+Please make sure you check other issues first to make sure you don't create a duplicate.
+
+
 ## TODO
 
-1. Solution to systems of linear equations
-   - Though still currently possible i.e `x = ~A @ b`.
+1. Solution to systems of linear equations.
+   * Though still currently possible i.e `x = ~A @ b`.
 2. Implementation of methods to find eigenvalues and eigenvectors.
-   * This requires a polynomial "solver" (at least for the basic approach) and I plan to work on that.
+   * This requires a polynomial "solver" (at least for the general approach) and I'm currently working on that.
 
 Please note that I personally **do NOT** plan to implement any "more efficient" algorithms for the matrix operations in this project. It's not the point of this project (at least, as of now) but contributions are welcome.
 

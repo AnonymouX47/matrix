@@ -253,3 +253,56 @@ class Column(RowColumn):
             return all(r1[i1] == r2[i2] for r1, r2 in zip(self.__matrix._array,
                                                             other.__matrix._array))
 
+
+    # In-place operations
+    # These modify the matrix directly
+
+    def __iadd__(self, other):
+        if (result := self.__add__(other)) is not NotImplemented:
+            self.__matrix.columns[self.__index + 1] = result
+            return self
+
+        return result
+
+    def __isub__(self, other):
+        if (result := self.__sub__(other)) is not NotImplemented:
+            self.__matrix.columns[self.__index + 1] = result
+            return self
+
+        return result
+
+    def __imul__(self, other):
+        if (result := self.__mul__(other)) is not NotImplemented:
+            self.__matrix.columns[self.__index + 1] = result
+            return self
+
+        return result
+
+    def __imatmul__(self, other):
+        if (result := self.__matmul__(other)) is not NotImplemented:
+            self.__matrix.columns[self.__index + 1] = result
+            return self
+
+        return result
+
+    def __itruediv__(self, other):
+        if (result := self.__truediv__(other)) is not NotImplemented:
+            self.__matrix.columns[self.__index + 1] = result
+            return self
+
+        return result
+
+    def __ipow__(self, other):
+        if (result := self.__pow__(other)) is not NotImplemented:
+            self.__matrix.columns[self.__index + 1] = result
+            return self
+
+        return result
+
+    def __ior__(self, other):
+        if (result := self.__or__(other)) is not NotImplemented:
+            self.__matrix.columns[self.__index + 1] = result
+            return self
+
+        return result
+
