@@ -697,7 +697,8 @@ class Matrix:
     def compare_rounded(mat1, mat2, ndigits=None):
         """
         Comapares two matrices as if the elements were rounded.
-        Useful for comparing matrices of floating-point elements.
+        Useful for comparing matrices of floating-point elements
+        and is the method recommended for such.
 
         Args:
             mat1, mat2 -> subject matrices
