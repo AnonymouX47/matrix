@@ -1,5 +1,13 @@
 # matrix
 
+```
+              __      _
+  __ _  ___ _/ /_____(_)_ __
+ /  ' \/ _ `/ __/ __/ /\ \ /
+/_/_/_/\_,_/\__/_/ /_//_\_\
+
+```
+
 A python package for matrix operations and manipulations.
 
 ## Contents
@@ -110,6 +118,9 @@ These are views of the matrix object, like `.keys()` and `.values()` are to `dic
 
 ## Installation
 
+### Requirements
+- Python 3.8
+
 Download and unzip this [repository](https://github.com/AnonymouX47/matrix/archive/refs/heads/main.zip) or run
 ```sh
 git clone https://github.com/AnonymouX47/matrix
@@ -124,8 +135,9 @@ Then, run
 ```sh
 python setup.py install
 ```
+to install the package.
 OR run
-```
+```sh
 python -i test.py
 ```
 to just test it out without installing the package.
@@ -165,7 +177,7 @@ pip uninstall matrix
 
 ## Contributing
 
-If you find any bug or have any suggestion for an improvement, please open an **Issue** in the [Issues section](https://github.com/AnonymouX47/matrix/issues), they're greatly welcomed.
+If you find any bug or have any suggestion for an improvement, please open an **Issue** in the [Issues section](https://github.com/AnonymouX47/matrix/issues), they're greatly welcome.
 
 Please make sure you check other issues first to make sure you don't create a duplicate.
 
