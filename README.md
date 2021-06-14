@@ -9,6 +9,7 @@ A python package for matrix operations and manipulations.
 * [Installation](#installation)
 * [Usage](#usage)
 * [Uninstallation](#uninstallation)
+* [Contributing](#contributing)
 * [TODO](#todo)
 
 ## Back-Story
@@ -27,7 +28,7 @@ I actually made sure i didn't test out or go through any similar project, till i
 
 ## Features
 
-This is just an outline of the major features of the library. For detailed explanation of the features and some implementation details, see the [documentation](docs/index.md).
+This is just an outline of the major features of the library. For the complete feature list, detailed descriptions and project documentation, see the [documentation](docs/index.md).
 
 ### Matrix initialization. Via:
 * The class constructor
@@ -123,6 +124,12 @@ Then, run
 ```sh
 python setup.py install
 ```
+OR run
+```
+python -i test.py
+```
+to just test it out without installing the package.
+
 **NOTE:** For windows users, Python must've been added to PATH (For help, check [here](https://datatofish.com/add-python-to-windows-path/)).
 
 
