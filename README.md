@@ -36,7 +36,7 @@ I actually made sure i didn't test out or go through any similar project, till i
 
 ## Features
 
-This is just an outline of the major features of the library. For the complete feature list, detailed descriptions and project documentation, see the [documentation](docs/index.md).
+This is just an outline of the major features of the library. For the complete feature list, detailed descriptions and project documentation, see the [documentation](https://anonymoux47.github.io/matrix/).
 
 ### Matrix initialization. Via:
 * The class constructor
@@ -166,7 +166,7 @@ Quick example:
 
 For more usage examples, check the [samples](samples/).
 
-For the complete feature list and descriptions, see [Features](docs/features.md).
+For the complete feature list and descriptions, see [Features](https://anonymoux47.github.io/matrix/features.html).
 
 
 ## Uninstallation
@@ -179,9 +179,11 @@ pip uninstall matrix
 
 ## Contributing
 
-If you find any bug or have any suggestion for an improvement, please open an **Issue** in the [Issues section](https://github.com/AnonymouX47/matrix/issues), they're greatly welcome.
+If you find any bug or have any suggestion for an improvement, please create an **Issue** in the [Issues section](https://github.com/AnonymouX47/matrix/issues), they're greatly welcome.
 
 Please make sure you check other issues first to make sure you don't create a duplicate.
+
+The project is open to Pull Requests if you want to contribute to the code but please make sure you do test your changes or additions well enough.
 
 
 ## TODO
