@@ -137,11 +137,12 @@ Then, run
 python setup.py install
 ```
 to install the package.
+
 OR run
 ```sh
 python -i test.py
 ```
-to just test it out without installing the package.
+to just test it out without installing the package (but will be limited to only that interactive session).
 
 **NOTE:** For windows users, Python must've been added to PATH (For help, check [here](https://datatofish.com/add-python-to-windows-path/)).
 
