@@ -116,7 +116,7 @@ class Matrix:
           e.g `matrix[::2, 3:4]`
           - the first slice selects rows.
           - the second slice selects columns.
-          - any 'stop' out of range is "forgiven".
+          - any 'stop' greater than the number of rows/columns is "forgiven".
           - any 'step' less than 1 is not allowed.
 
         NOTE:
@@ -173,13 +173,15 @@ class Matrix:
 
                 if isinstance(value, __class__):
                     array = value.__array
-                    checks = (value.__ncol == col_slice.stop - col_slice.start
-                              and value.__nrow == row_slice.stop - row_slice.start)
+                    checks = (value.__ncol == slice_length(col_slice)
+                                and value.__nrow == slice_length(row_slice)
+                                )
                 else:
                     minlen, maxlen, nrow, array = valid_2D_iterable(value)
                     checks = (minlen == maxlen
-                              and maxlen == col_slice.stop - col_slice.start
-                              and nrow == row_slice.stop - row_slice.start)
+                                and maxlen == slice_length(col_slice)
+                                and nrow == slice_length(row_slice)
+                                )
 
                 if checks:
                     for row, _row in zip(self.__array[row_slice], array):
@@ -199,7 +201,7 @@ class Matrix:
     def __iter__(self):
         """
         Returns a generator that yields the *elements* of the matrix.
-        Raises a `BrokenMatrixView` if the matrix is resized during iteration.
+        Raises a `RuntimeError` if the matrix is resized during iteration.
 
         The generator can be set to any vaild row and column of the matrix
         from which to continue iteration using the send() method.
@@ -220,17 +222,24 @@ class Matrix:
                 r_c = (yield row[c])
 
                 if size != self.size:
-                    raise BrokenMatrixView(
+                    raise RuntimeError(
                                     "The matrix was resized during iteration.",
                                     view_obj=self)
 
-                if r_c:
+                if r_c is not None:
                     if isinstance(r_c, tuple) and len(r_c) == 2:
+                        # It's the only way to prevent a -ve or zero index
+                        if not (0 < r_c[0] <= self.__nrow and 0 < r_c[1] <= self.__ncol):
+                            return "Coordinate out of range."
                         r, c = r_c[0] - 1, r_c[1] - 2
                         row = self.__array[r]
                     elif isinstance(r_c, int):
+                        # It's the only way to prevent a -ve or zero index
+                        if r_c < 1:
+                            return "Row index out of range."
                         r = r_c - 2
                         break
+                    else: return "Wrong type of argument."
                 c += 1
             r += 1
 
@@ -566,15 +575,26 @@ class Matrix:
 
     @property
     def diagonal(self):
-        """Principal diagonal of the matrix."""
+        """Principal diagonal of a square matrix."""
 
         if self.__nrow != self.__ncol:
-            raise InvalidDimension("The matrix is not square.",
-                                    matrices=(self,)
-                                    )
-        array = self.__array
+            raise InvalidDimension("The matrix is not square.", matrices=(self,))
 
-        return [array[i][i] for i in range(self.__nrow)]
+        return [row[i] for i, row in enumerate(self.__array)]
+
+    @diagonal.setter
+    def diagonal(self, value):
+        """
+        Sets the elements on the principal diagonal of a square matrix
+        to the contents of 'value'.
+        """
+
+        if self.__nrow != self.__ncol:
+            raise InvalidDimension("The matrix is not square.", matrices=(self,))
+
+        value = valid_container(value, self.__nrow)
+        for i, row in enumerate(self.__array):
+            row[i] = value[i]
 
 
     # Explicit Operations
@@ -596,20 +616,20 @@ class Matrix:
 
         return submatrix.determinant
 
-    def itranspose(self):
+    def transpose(self):
         """Transposes the matrix **in-place**,"""
 
         self.__array[:] = map(list, zip(*self.__array))
         self.__ncol, self.__nrow = self.size
 
-    def transpose(self):
+    def transposed(self):
         """
         Returns the transpose of a matrix (self) as a new matrix
         and leaves the original (self) unchanged.
         """
 
         new = self.copy()
-        new.itranspose()
+        new.transpose()
 
         return new
 
@@ -699,6 +719,11 @@ class Matrix:
 
 
     ## Other operations
+
+    def round(self, ndigits=None):
+        """Rounds the matrix elements in-place"""
+
+        self.__array[:] = [[round(x, ndigits) for x in row] for row in self.__array]
 
     @staticmethod
     def compare_rounded(mat1, mat2, ndigits=None):
@@ -799,13 +824,13 @@ class Matrix:
     def rotate_left(self):
         """Rotate the matrix 90 degrees anti-clockwise."""
 
-        self.itranspose()
+        self.transpose()
         self.flip_y()
 
     def rotate_right(self):
         """Rotate the matrix 90 degrees clockwise."""
 
-        self.itranspose()
+        self.transpose()
         self.flip_x()
 
     def __round(self, ndigits):
@@ -860,7 +885,7 @@ class Matrix:
     def is_orthogonal(self):
         """Returns `True` if the matrix is orthogonal and `False` otherwise."""
 
-        return (m @ m.transpose()).is_unit()
+        return (m @ m.transposed()).is_unit()
 
     def is_sqaure(self):
         """Returns `True` if the matrix is square and `False` otherwise."""

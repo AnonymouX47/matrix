@@ -31,6 +31,7 @@ def randint_matrix(nrow: int, ncol: int, _range, /):
     Raises:
         `TypeError` if the arguments are of innapropriate types.
         `ValueError` if 'nrow' or 'ncol' is less than 1.
+        `ValueError` if the given range is empty.
     """
 
     if not all(isinstance(arg, int) for arg in (nrow, ncol)):
@@ -41,7 +42,13 @@ def randint_matrix(nrow: int, ncol: int, _range, /):
         raise ValueError("Matrix dimensions must be greater than zero.")
 
     _range = (_range.start, _range.stop, _range.step)
-    return Matrix((randrange(*_range) for _ in range(ncol)) for _ in range(nrow))
+    try:
+        matrix = Matrix((randrange(*_range)
+                        for _ in range(ncol)) for _ in range(nrow))
+    except ValueError:
+        raise ValueError("The given range is empty.") from None
+
+    return matrix
 
 def random_matrix(nrow: int, ncol: int, start: int, stop: int, /):
     """
@@ -57,6 +64,7 @@ def random_matrix(nrow: int, ncol: int, start: int, stop: int, /):
     Raises:
         `TypeError` if not all the arguments are of type 'int'.
         `ValueError` if 'nrow' or 'ncol' is less than 1.
+        `ValueError` if the given range is empty.
     """
 
     if not all(isinstance(arg, int) for arg in (nrow, ncol, start, stop)):
@@ -64,6 +72,11 @@ def random_matrix(nrow: int, ncol: int, start: int, stop: int, /):
     if nrow < 1 or ncol < 1:
         raise ValueError("Matrix dimensions must be greater than zero.")
 
-    return Matrix((randint(start, stop) + random()
-                    for _ in range(ncol)) for _ in range(nrow))
+    try:
+        matrix = Matrix((randrange(start, stop) + random()
+                        for _ in range(ncol)) for _ in range(nrow))
+    except ValueError:
+        raise ValueError("The given range is empty.") from None
+
+    return matrix
 
