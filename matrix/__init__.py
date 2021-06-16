@@ -1,4 +1,12 @@
-"""Top-most package level."""
+"""
+A python package for matrix operations and manipulations.
+
+Author: AnonymouX47
+Home-page: https://github.com/AnonymouX47/matrix
+License: GPLv3.0
+
+Copyright 2021
+"""
 
 from random import randint, random, randrange
 
