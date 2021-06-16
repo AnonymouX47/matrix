@@ -9,7 +9,7 @@ Every matrix element is an instance of a subclass (`Element`) of python's `decim
 
 Even though a `Matrix` instance mutable, it provides a few methods that return a new matrix instance.
 
-For demonstrations of the features described here, see the [sample files](../samples/).
+For demonstrations of the features described here, see the [sample files](https://github.com/AnonymouX47/matrix/tree/main/samples).
 
 ## Matrix Initialization
 
