@@ -69,6 +69,7 @@ This is just an outline of the major features of the library. For the complete f
 * Addition and subtraction
 * Scalar multiplication
 * Matrix multiplication
+* Exponentiation (Repeated matrix multiplication)
 * Division (by scalar)
 * Inverse
 * Transpose

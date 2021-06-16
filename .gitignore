@@ -1,4 +1,14 @@
+# Backup files
 *~
+
+# Python module caches
 __pycache__/
-*.sw[op]
+
+# Vim swap files
+.*.sw*
+
+# package build and install directories
+build/
+dist/
+matrix.egg-info/
 
