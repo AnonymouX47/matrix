@@ -1,11 +1,6 @@
 # Features
 
-## Table of Contents
-
-[TOC]
-
-
-An instance of `Matrix` is a **mutable** object modelling a mathematical matrix.
+An instance of the `Matrix` class is a **mutable** object modelling a mathematical matrix.
 - It implements common matrix operations and properties.
 - It is completely **1-indexed**.
 - The **_stop_** index is always **included** in any **slice**.
@@ -26,7 +21,7 @@ The Matrix class constructor accepts two forms of arguments:
 
 1. Given two positive integers; the number of rows and columns respectively.
    - `Matrix(rows, cols)`
-       - initializes as a null matrix of the given dimension.
+   - initializes as a null matrix of the given dimension.
 2. Given a 2-D iterable of real numbers.
    - `Matrix(array, zfill=False)`
    - If all rows have the same length, the matrix is initialized taking the array in row-major order.
