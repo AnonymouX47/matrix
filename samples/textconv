@@ -1,0 +1,20 @@
+#!/usr/bin/env python3
+
+"""Converts an IPython notebook to text usable for diffs"""
+
+import sys
+import json
+
+# When used with git, CWD is the root of the git repo
+
+cells = json.load(open(sys.argv[1]))["cells"]
+
+for cell in cells:
+    if cell["cell_type"] == "markdown":
+        print('\n'.join([line.rstrip('\n') for line in cell["source"]]))
+    elif cell["cell_type"] == "code":
+        print("```\n"
+                + '\n'.join([line.rstrip('\n') for line in cell["source"]])
+                + "\n```"
+                )
+

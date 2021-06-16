@@ -1,0 +1,3 @@
+# Text conversion for IPython notebook diffs
+*.ipynb diff=ipynb
+
