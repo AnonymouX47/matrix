@@ -110,10 +110,8 @@ def valid_container(iterable, length=None):
     If so, returns a list of matrix elements derived from 'iterable'.
     """
 
-    try:
-        container = tuple(iterable)
-    except TypeError:
-        raise TypeError("The object isn't iterable.") from None
+    # Allow the TypeError to be propagated if 'iterable' is not iterable.
+    container = tuple(iterable)
     if not all((isinstance(x, (Decimal, Real)) for x in container)):
         raise TypeError("The object must be an iterable of real numbers.")
     if None is not length != len(container):

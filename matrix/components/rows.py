@@ -141,8 +141,9 @@ class Row(RowColumn):
     """
     A single row of a matrix.
 
-    'matrix' -> The underlying matrix whose row is being represented.
-    'index' -> The (0-indexed) index of the row the object should represent.
+    Args:
+        'matrix' -> The underlying matrix whose row is being represented.
+        'index' -> The (0-indexed) index of the row the object should represent.
 
     Instead of returning new lists or tuples as rows, this would:
     - be more efficient (both time and space).
@@ -218,11 +219,6 @@ class Row(RowColumn):
 
         return MatrixIter(iter(self.__matrix._array[self.__index]), self.__matrix)
 
-    def _fast_iter(self):
-        """Meant to be used internally for faster iteration"""
-
-        return iter(self.__matrix._array[self.__index])
-
     def __contains__(self, item):
         self.__validity_check()
 
@@ -251,63 +247,54 @@ class Row(RowColumn):
 
     def __iadd__(self, other):
         if (result := self.__add__(other)) is not NotImplemented:
-            self.__matrix.rows[self.__index + 1] = result
+            self.__matrix._array[self.__index] = result
             return self
 
         return result
 
     def __isub__(self, other):
         if (result := self.__sub__(other)) is not NotImplemented:
-            self.__matrix.rows[self.__index + 1] = result
+            self.__matrix._array[self.__index] = result
             return self
 
         return result
 
     def __imul__(self, other):
         if (result := self.__mul__(other)) is not NotImplemented:
-            self.__matrix.rows[self.__index + 1] = result
+            self.__matrix._array[self.__index] = result
             return self
 
         return result
 
     def __imatmul__(self, other):
         if (result := self.__matmul__(other)) is not NotImplemented:
-            self.__matrix.rows[self.__index + 1] = result
+            self.__matrix._array[self.__index] = result
             return self
 
         return result
 
     def __itruediv__(self, other):
         if (result := self.__truediv__(other)) is not NotImplemented:
-            self.__matrix.rows[self.__index + 1] = result
-            return self
-
-        return result
-
-    def __ipow__(self, other):
-        if (result := self.__pow__(other)) is not NotImplemented:
-            self.__matrix.rows[self.__index + 1] = result
-            return self
-
-        return result
-
-    def __ior__(self, other):
-        if (result := self.__or__(other)) is not NotImplemented:
-            self.__matrix.rows[self.__index + 1] = result
+            self.__matrix._array[self.__index] = result
             return self
 
         return result
 
 
-    # Explicit operations
+    # Explicit
 
+    @property
     def pivot_index(self):
         """Returns the index of the pivot (first non-zero) element of the row."""
 
         for i, elem in enumerate(self.__matrix._array[self.__index], 1):
-            if elem: break
+            if elem: return i
         else:
+            # Zero is never a possible index in the matrix
             return 0  # Zero row.
 
-        return i
+    def _fast_iter(self):
+        """Meant to be used internally for faster iteration"""
+
+        return iter(self.__matrix._array[self.__index])
 

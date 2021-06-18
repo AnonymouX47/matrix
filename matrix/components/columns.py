@@ -147,8 +147,9 @@ class Column(RowColumn):
     """
     A single column of a matrix.
 
-    'matrix' -> The underlying matrix whose column is being represented.
-    'index' -> The (0-indexed) index of the column the object should represent.
+    Args:
+        'matrix' -> The underlying matrix whose column is being represented.
+        'index' -> The (0-indexed) index of the column the object should represent.
 
     Instead of returning new lists or tuples as columns, this would:
     - be more efficient (both time and space).
@@ -226,11 +227,6 @@ class Column(RowColumn):
         return MatrixIter((row[self.__index] for row in self.__matrix._array),
                             self.__matrix)
 
-    def _fast_iter(self):
-        """Meant to be used internally for faster iteration"""
-
-        return iter([row[self.__index] for row in self.__matrix._array])
-
     def __contains__(self, item):
         self.__validity_check()
 
@@ -292,17 +288,11 @@ class Column(RowColumn):
 
         return result
 
-    def __ipow__(self, other):
-        if (result := self.__pow__(other)) is not NotImplemented:
-            self.__matrix.columns[self.__index + 1] = result
-            return self
 
-        return result
+    # Explicit
 
-    def __ior__(self, other):
-        if (result := self.__or__(other)) is not NotImplemented:
-            self.__matrix.columns[self.__index + 1] = result
-            return self
+    def _fast_iter(self):
+        """Meant to be used internally for faster iteration"""
 
-        return result
+        return iter([row[self.__index] for row in self.__matrix._array])
 

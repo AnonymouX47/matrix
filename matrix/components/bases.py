@@ -5,8 +5,8 @@ from numbers import Real
 from operator import add, mul, truediv, sub
 
 from .elements import Element
-from ..utils import (display_adj_slice, mangled_attr, slice_length,
-                    valid_container, BrokenMatrixView
+from ..utils import (display_adj_slice, is_iterable, mangled_attr,
+                    slice_length, valid_container, BrokenMatrixView
                     )
 
 @mangled_attr(_set=False, _del=False)
@@ -85,49 +85,76 @@ class RowColumn:
 
     def __add__(self, other) -> list:
         """
-        Adds rows/columns element-by-element.
+        Point-wise addition.
 
-        Each operand must be either a `Row` or `Column` and be of equal length.
+        'other' must be an iterable of real numbers
+        with same length as the row/column.
         """
 
         self.__validity_check()
 
-        if not (isinstance(other, __class__) or valid_container(other)):
-            return NotImplemented
-
-        if len(self) != len(other):
+        if isinstance(other, __class__):
+            if len(self) == len(other):
+                return _rounded(list(map(
+                            add, self._fast_iter(), other._fast_iter()
+                            )))
             raise ValueError("The rows/columns must be of equal length.")
 
-        return list(map(
-                add,
-                self._fast_iter(),
-                other._fast_iter() if isinstance(other, __class__) else other
-                ))
+        if is_iterable(other):
+            other = valid_container(other, len(self))
+            return _rounded(list(map(add, self._fast_iter(), other)))
+
+        return NotImplemented
+
+    def __radd__(self, other) -> list:
+        """Reflected point-wise addition."""
+
+        return self.__add__(other)
 
     def __sub__(self, other) -> list:
         """
-        Subtracts rows/columns element-by-element.
+        Point-wise subtraction.
 
-        Each operand must be either a `Row` or `Column` and be of equal length.
+        'other' must be an iterable of real numbers
+        with same length as the row/column.
         """
 
         self.__validity_check()
 
-        if not (isinstance(other, __class__) or valid_container(other)):
-            return NotImplemented
-
-        if len(self) != len(other):
+        if isinstance(other, __class__):
+            if len(self) == len(other):
+                return _rounded(list(map(
+                            sub, self._fast_iter(), other._fast_iter()
+                            )))
             raise ValueError("The rows/columns must be of equal length.")
 
-        return list(map(
-                sub,
-                self._fast_iter(),
-                other._fast_iter() if isinstance(other, __class__) else other
-                ))
+        if is_iterable(other):
+            other = valid_container(other, len(self))
+            return _rounded(list(map(sub, self._fast_iter(), other)))
+
+        return NotImplemented
+
+    def __rsub__(self, other) -> list:
+        """Reflected point-wise subtraction."""
+
+        self.__validity_check()
+
+        if isinstance(other, __class__):
+            if len(self) == len(other):
+                return _rounded(list(map(
+                            sub, other._fast_iter(), self._fast_iter()
+                            )))
+            raise ValueError("The rows/columns must be of equal length.")
+
+        if is_iterable(other):
+            other = valid_container(other, len(self))
+            return _rounded(list(map(sub, other, self._fast_iter())))
+
+        return NotImplemented
 
     def __mul__(self, other) -> list:
         """
-        Multiply each element of row/column by scalar.
+        Scalar multiplication.
 
         'other' must be a real number.
         """
@@ -146,48 +173,74 @@ class RowColumn:
 
     def __matmul__(self, other):
         """
-        Element-wise multiplication of rows/columns.
+        Point-wise multiplication.
 
-        The second operand must be a `Row`, `Column`
-        or any iterable of real numbers and be of equal length.
+        'other' must be an iterable of real numbers
+        with same length as the row/column.
         """
 
-        if not (isinstance(other, __class__) or valid_container(other)):
-            return NotImplemented
-
-        if len(self) != len(other):
+        if isinstance(other, __class__):
+            if len(self) == len(other):
+                return _rounded(list(map(
+                            mul, self._fast_iter(), other._fast_iter()
+                            )))
             raise ValueError("The rows/columns must be of equal length.")
 
-        return _rounded(map(
-                mul,
-                self._fast_iter(),
-                other._fast_iter() if isinstance(other, __class__) else other
-                ))
+        if is_iterable(other):
+            other = valid_container(other, len(self))
+            return _rounded(list(map(mul, self._fast_iter(), other)))
+
+        return NotImplemented
 
     def __rmatmul__(self, other):
-        """Reflected row/column element-wise multiplication"""
+        """Reflected point-wise multiplication"""
 
         return self.__matmul__(other)
 
     def __truediv__(self, other) -> list:
         """
-        Divide row/column by scalar, element-by-element.
+        Scalar or point-wise division.
 
-        'other' must be a real number.
+        'other' must be a real number
+        or iterable of real numbers with same length as the row/column.
         """
 
         self.__validity_check()
 
         if isinstance(other, (Real, Decimal)):
-            return _rounded([elem / other for elem in self])
-        elif isinstance(other, __class__) or valid_container(other):
-            if len(self) != len(other):
-                raise ValueError("The rows/columns must be of equal length.")
-            return _rounded(map(
-                    truediv,
-                    self._fast_iter(),
-                    other._fast_iter() if isinstance(other, __class__) else other
-                    ))
+            return _rounded([elem / other for elem in self._fast_iter()])
+
+        if isinstance(other, __class__):
+            if len(self) == len(other):
+                return _rounded(list(map(
+                            truediv, self._fast_iter(), other._fast_iter()
+                            )))
+            raise ValueError("The rows/columns must be of equal length.")
+
+        if is_iterable(other):
+            other = valid_container(other, len(self))
+            return _rounded(list(map(truediv, self._fast_iter(), other)))
+
+        return NotImplemented
+
+    def __rtruediv__(self, other) -> list:
+        """
+        Reflected point-wise division
+        (Scalar division shouldn't be reflected)
+        """
+
+        self.__validity_check()
+
+        if isinstance(other, __class__):
+            if len(self) == len(other):
+                return _rounded(list(map(
+                            truediv, other._fast_iter(), self._fast_iter()
+                            )))
+            raise ValueError("The rows/columns must be of equal length.")
+
+        if is_iterable(other):
+            other = valid_container(other, len(self))
+            return _rounded(list(map(truediv, other, self._fast_iter())))
 
         return NotImplemented
 
