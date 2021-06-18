@@ -429,33 +429,19 @@ class Matrix:
 
         if self.__nrow != self.__ncol:
             raise InvalidDimension(
-                    "This matrix in non-square, hence has no inverse.",
+                    "This matrix in non-square, hence it's non-invertible.",
                     matrices=(self,)
                     )
 
-        augmented = self | unit_matrix(self.__nrow)
-        array = augmented.__array
-        nrow = augmented.__nrow
-
+        nrow = self.__nrow
+        augmented = self | unit_matrix(nrow)
         augmented.reduce_lower_tri()
-
-        if not all(array[i][i] for i in range(nrow)):
-            raise ZeroDeterminant(
-            "The determinant of this matrix is zero, hence it's non-invertible.",
-            matrix=self
-            ) from None
-
-        augmented.reduce_upper_tri(as_square=True)
-
-        # Reduce diagonal elements of original matrix to ones
-        for i in range(nrow):
-            d_i = array[i][i]
-            # Avoids having `-0` as elements.
-            array[i] = [x / d_i if x else Element(0) for x in array[i]]
-
+        try:
+            augmented.back_substitution()
+        except ZeroDeterminant as err:
+            # Shows that the zero determinant is the reason for non-invertibility
+            raise ValueError("This matrix is non-invertible.") from err
         inverse = augmented[:, nrow+1:]
-        # Due to floating-point limitations
-        inverse.__round(12)
 
         return inverse
 
@@ -565,9 +551,8 @@ class Matrix:
 
         matrix = self.copy()
         matrix.reduce_lower_tri()
-        array = matrix.__array
 
-        det = prod([array[i][i] for i in range(matrix.__nrow)])
+        det = prod([row[i] for i, row in enumerate(matrix.__array)])
 
         return (Element(round(det))
                 if abs(det - round(det)) < Element("1e-12")
@@ -637,33 +622,57 @@ class Matrix:
         """
         Reduces the lower triangle of the matrix.
         Also works on non-square matrices.
+
+        Implements the Forward Elimination step of Gaussian Elimiation.
+        Reduces the matrix to row echelon form.
         """
 
         if self.__ncol >= self.__nrow:
             array = self.__array
             nrow = self.__nrow
 
-            for j in range(nrow-1):
-                if not array[j][j]:
-                    if not any(array[j][j+1:]):
-                        # If j is a zero row, move to the bottom
+            # NOTE: All indices in here are zero-based
+            # since the underlying array is being used directly.
+
+            # Any number with a magnitude below 'limit'
+            # is considered a zero, due to floating-point limitations
+            limit = Element("1e-12")
+
+            j = 0  # Row currenly being used to reduce those below it.
+            # Column of pivot element on row j
+            # and of elements being reduced to zero at that step
+            k = 0
+            while k < nrow and j < nrow-1:
+                if abs(array[j][k]) < limit:
+                    if not any(array[j][k+1:]):
+                        # row j is a zero row, move to the bottom
                         array.insert(nrow, array.pop(j))
+                        # In case the row now at j also has a zero at column k
+                        continue
                     else:
-                        for k in range(j+1, nrow):
-                            if array[k][j]:
-                                # Move row k+1 **above** row j+1 since it has
-                                # a non-zero element on that same column j+1.
-                                # There can never exist a row **below** row j+1
-                                # that has a non-zero element **before** column j+1.
-                                array.insert(j, array.pop(k))
+                        # Find next row below with a non-zero element on column k
+                        for i in range(j+1, nrow):
+                            if abs(array[i][k]) > limit:
+                                # Move row i **above** row j since it has
+                                # a non-zero element on that same column j.
+                                # There can never exist a row **below** row j
+                                # that has a non-zero element **before** column k.
+                                array.insert(j, array.pop(i))
                                 break
-                        else:  # All zeros **below** the diagonal element
+                        else:  # All elements **below** array[j][k] are zeros
+                            # Move on to next column, still on the same row j
+                            k += 1
                             continue
+                # Use row j to reduce those below it,
+                # reducing all elements below on column k to zeros
                 for i in range(j+1, nrow):
-                    # Row operation is redundant if array[i][j] is zero
-                    if array[i][j]:
-                        mult = array[i][j] / array[j][j]
+                    # Row operation is redundant if array[i][k] is zero
+                    # Also prevents having `-0` elements
+                    if abs(array[i][k]) > limit:
+                        mult = array[i][k] / array[j][k]
                         array[i] = [x - y*mult for x, y in zip(array[i], array[j])]
+                j += 1
+                k += 1
         else:
             self.flip_x(); self.flip_y()
             self.reduce_upper_tri()
@@ -676,6 +685,9 @@ class Matrix:
         Reduces the upper triangle of the matrix.
         Also works on non-square matrices.
 
+        Impliments part of Back Substition step of Gaussian Elimination.
+        Reduces a matrix to sort of a "transposed row echelon" form.
+
         Args:
             - as_square -> If true, row reduction is performed as if
             it were a square matrix of the shorter dimension,
@@ -687,34 +699,106 @@ class Matrix:
             array = self.__array
             min_dim = min(self.__nrow, self.__ncol)
 
-            for j in range(min_dim-1, 0, -1):
-                if not array[j][j]:
-                    if not any(array[j][:j]):
-                        # If j is a zero row, move to the top
+            # NOTE: All indices in here are zero-based
+            # since the underlying array is being used directly.
+
+            # Any number with a magnitude below 'limit'
+            # is considered a zero, due to floating-point limitations
+            limit = Element("1e-12")
+
+            j = min_dim - 1  # Row currenly being used to reduce those above it.
+            # Column of "reverse-pivot" element on row j
+            # and of elements being reduced to zero at that step
+            k = j
+            while k >= 0 and j > 0:
+                if abs(array[j][k]) < limit:
+                    if not any(array[j][:k]):
+                        # row j is a zero row, move to the top
                         array.insert(0, array.pop(j))
+                        # In case the row now at j also has a zero at column k
+                        continue
                     else:
-                        for k in range(j-1, -1, -1):
-                            if array[k][j]:
-                                # Move row k+1 **below** row j+1 since it has
-                                # a non-zero element on that same column j+1.
-                                # There can never exist a row **above** row j+1
-                                # that has a non-zero element **after** column j+1.
-                                # Note that the every row below k+1 (including j+1)
-                                # would've moved up an index after popping row k+1.
-                                array.insert(j, array.pop(k))
+                        # Find next row above with a non-zero element on column k
+                        for i in range(j-1, -1, -1):
+                            if abs(array[i][k]) > limit:
+                                # Move row i **below** row j since it has
+                                # a non-zero element on that same column j.
+                                # There can never exist a row **above** row j
+                                # that has a non-zero element **after** column k.
+                                # Note that every row below i (including row j)
+                                # would've moved up an index after popping row i.
+                                array.insert(j, array.pop(i))
                                 break
-                        else:  # All zeros **above** the diagonal element
+                        else:  # All elements **above** array[j][k] are zeros
+                            # Move on to previous column, still on the same row j
+                            k -= 1
                             continue
+                # Use row j to reduce those above it,
+                # reducing all elements above on column k to zeros
                 for i in range(j-1, -1, -1):
-                    # Row operation is redundant if array[i][j] is zero
-                    if array[i][j]:
-                        mult = array[i][j] / array[j][j]
+                    # Row operation is redundant if array[i][k] is zero
+                    # Also prevents having `-0` elements
+                    if abs(array[i][k]) > limit:
+                        mult = array[i][k] / array[j][k]
                         array[i] = [x - y*mult for x, y in zip(array[i], array[j])]
+                j -= 1
+                k -= 1
         else:
             self.flip_x(); self.flip_y()
             self.reduce_lower_tri()
             self.flip_x(); self.flip_y()
 
+        self.__round(12)
+
+    def reduced_row_echelon(self):
+        """Transforms the matrix to Reduced Row Echelon form"""
+
+        self.reduce_lower_tri()
+
+        array = self.__array
+        for i in range(self.__nrow):
+            # Avoids division by zero and redundant division by 1
+            if (j := self.rows[i+1].pivot_index) and (pivot := array[i][j-1]) != 1:
+                # Prevents having `-0` as elements.
+                array[i] = [x / pivot if x else Element(0) for x in array[i]]
+
+    def back_substitution(self):
+        """
+        Back Substitution step of Gausian Elimination performed **in-place**.
+        Leaves the matrix in reduced row echelon form.
+
+        Raises:
+            `ValueError` if the lower triangle of the matrix is not "zeroed-out".
+            `ZeroDeterminant` if determinant of the matrix is zero.
+        """
+
+        if not self.is_upper_triangular(as_square=True):
+            raise ValueError(
+                    "All elements below the principal diagonal must be zeros"
+                    " (Forward Elimination comes before Back Substitution)."
+                    )
+
+        array = self.__array
+
+        if not all(row[i] for i, row in enumerate(array)):
+            raise ZeroDeterminant(
+                        "The determinant of this matrix is zero.",
+                        matrix=self
+                        ) from None
+
+        self.reduce_upper_tri(as_square=True)
+
+        limit = Element("1e-12")
+        # Ensures the matrix is in reduced row echelon form.
+        # The pivot on each row will be the diagonal element
+        # since the matrix is non-singular and already reduced.
+        for i in range(self.__nrow):
+            # Avoids redundant division by 1.
+            if (d_i := array[i][i]) != 1:
+                # Prevents having `-0` as elements.
+                array[i] = [x / d_i if x else Element(0) for x in array[i]]
+
+        # Due to floating-point limitations
         self.__round(12)
 
 
@@ -797,8 +881,7 @@ class Matrix:
             if diff > 0:
                 self.__array.extend([[Element(0)] * self.__ncol] * diff)
             elif diff < 0:
-                # Delete the last `-diff` rows (**in-place**).
-                self.__array[diff:] = []
+                del self.__array[diff:]
             self.__nrow = nrow
 
         # Number of columns
@@ -807,16 +890,17 @@ class Matrix:
                 if any(len(row) > ncol for row in self.__array):
                     raise ValueError("Specified number of columns is"
                                      " less than length of longest row.")
-                for row in self.__array: row.extend([Element(0)] * (ncol - len(row)))
+                for row in self.__array:
+                    row.extend([Element(0)] * (ncol - len(row)))
                 self.__ncol = ncol
                 return
 
             diff = ncol - self.__ncol
             if diff > 0:
-                for row in self.__array: row.extend([Element(0)] * diff)
+                for row in self.__array:
+                    row.extend([Element(0)] * diff)
             elif diff < 0:
-                # Delete the last `-diff` elements in each row (**in-place**).
-                for row in self.__array: row[diff:] = []
+                for row in self.__array: del row[diff:]
             self.__ncol = ncol
         elif pad_rows:
             raise ValueError("Number of columns not specified for padding.")
@@ -887,7 +971,7 @@ class Matrix:
 
         return (m @ m.transposed()).is_unit()
 
-    def is_sqaure(self):
+    def is_square(self):
         """Returns `True` if the matrix is square and `False` otherwise."""
 
         return self.__nrow == self.__ncol
@@ -971,13 +1055,27 @@ class Matrix:
 
         return True
 
-    def is_upper_triangular(self):
-        """Returns `True` if the matrix is upper triangular and `False` otherwise."""
+    def is_upper_triangular(self, *, as_square=False):
+        """
+        Returns `True` if the matrix is upper triangular and `False` otherwise.
+        Args:
+            - as_square -> If true, the matrix should be taken as being square.
+            Meant for internal use.
+        """
 
-        # `-1` here to avoid `n-1` in the loop condition below.
-        array, n = self.__array, self.__nrow-1
+        array = self.__array
 
-        if n+1 != self.__ncol: return False  # matrix is not sqaure
+        # `-1` here is to avoid `n-1` in the loop condition below.
+        n = self.__nrow - 1
+
+        if n+1 != self.__ncol:
+            if not as_square:
+                return False  # matrix is not sqaure and not explicitly allowed
+
+            # Not expecting vertically rectangular matrices but min dimension is
+            # used so as to avoid IndexError in case such a matrix is passed in.
+            # `-1` here is to avoid `n-1` in the loop condition below.
+            n = min(n, self.__ncol - 1)
 
         # All elements **below** the principal diagonal must be zeros.
         j = 0
