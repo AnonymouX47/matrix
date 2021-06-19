@@ -74,7 +74,10 @@ This is just an outline of the major features of the library. For the complete f
 * Inverse
 * Transpose
 * Augmentation
-* Row reduction
+* Row reduction / forward elimination:
+  * Row echelon form
+  * Reduced Row Echelon form
+* Back Substitution
 
 ### Tests for matrix properties and special matrices
 * Diagonality
@@ -116,6 +119,10 @@ These are views of the matrix object, like `.keys()` and `.values()` are to `dic
 * Matrix resize
 * Rounded comparison
 
+### Solutions to systems of linear equations
+* Gauss-Jordan Elimination
+* Inverse method
+
 
 ## Installation
 
@@ -153,15 +160,15 @@ Quick example:
 ```python
 >>> from matrix import Matrix
 >>> print(Matrix(4, 4))
-―――――――――――――――――
++―――――――――――――――+
 | 0 | 0 | 0 | 0 |
-―――――――――――――――――
+|―――+―――+―――+―――|
 | 0 | 0 | 0 | 0 |
-―――――――――――――――――
+|―――+―――+―――+―――|
 | 0 | 0 | 0 | 0 |
-―――――――――――――――――
+|―――+―――+―――+―――|
 | 0 | 0 | 0 | 0 |
-―――――――――――――――――
++―――――――――――――――+
 ```
 
 For more usage examples, check the [samples](samples/).
@@ -188,8 +195,7 @@ The project is open to Pull Requests if you want to contribute to the code but p
 
 ## TODO
 
-1. Solution to systems of linear equations.
-   * Though still currently possible i.e `x = ~A @ b`.
+1. Matrix input (probably via curses).
 2. Implementation of methods to find eigenvalues and eigenvectors.
    * This requires a polynomial "solver" (at least for the general approach) and I'm currently working on that.
 

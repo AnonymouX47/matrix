@@ -98,12 +98,15 @@ class Matrix:
         # specifying the width (plus a padding of 2) and center-align
         fmt_strs = ["^%d" % (width + 2) for width in column_widths]
 
-        bar = '\u2015' * (sum(column_widths) + self.__ncol * 3  + 1)
+        # (column widths + one plus and two padding spaces per column - one plus)
+        bar = '+' + '\u2015' * (sum(column_widths) + self.__ncol * 3 - 1) + '+'
+        mid_bar = ( '|' + '+'.join('\u2015' * (width + 2)
+                                    for width in column_widths) + '|')
 
         return (bar
-            + ('\n' + bar).join('\n|' + '|'.join(map(format, row, fmt_strs)) + '|'
+        + ('\n' + mid_bar).join('\n|' + '|'.join(map(format, row, fmt_strs)) + '|'
                                 for row in rows_strs)
-            + '\n' + bar)
+        + '\n' + bar)
 
 
     def __getitem__(self, sub):

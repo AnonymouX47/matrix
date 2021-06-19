@@ -110,7 +110,7 @@ This can be done in two ways:
 
 The `Matrix` class provides the common matrix properties as object attributes:
 - `nrow` -> Number of rows
-* `ncol` -> Number of columns
+- `ncol` -> Number of columns
 - `size` -> Matrix size or dimension, as a tuple `(nrow, ncol)`.
 - `determinant` -> Determinant
   - Raises an error for non-square matrices.
@@ -129,7 +129,7 @@ All these operations return a new `Matrix` instance except stated otherwise.
 ### Via unary operators
 
 - Negation: `-m`
-- Inverse: `~m
+- Inverse: `~m`
 
 ### Via binary operators
 
@@ -144,15 +144,20 @@ All these operations return a new `Matrix` instance except stated otherwise.
 
 where _m_ is a matrix and _c_ is a real number.
 
+The augmented assignment counterparts of these binary operators are also supported and perform the operations **in-place** i.e the matrix object remains unchanged.
+
 ### Via explicit methods
 
 - Transpose: This is implemented by two methods:
-  - `transpose()` -> Returns a transposed copy.
-  - `itranspose()`  -> Transposes the matrix **in-place**.
-- Row reduction (**In-place**): Implemented as instance mathods:
-  - `reduce_lower_tri()`  -> Reduces all elements in the lower triangle to zeros.
+  - `transposed()` -> Returns a transposed copy.
+  - `transpose()`  -> Transposes the matrix **in-place**.
+- Row reduction (all **In-place**): Implemented as instance methods:
+  - `reduce_lower_tri()`  -> Transforms the matrix to row echelon form.
   - `reduce_upper_tri()`  -> Reduces all elements in the upper triangle to zeros.
+  - `reduced_row_echelon()` -> Transforms the matrix to _reduced_ row echelon form.
   - These also work for non-square matrices.
+- `back_substitution()` -> Back substitution (**in-place**).
+  - This operation **requires** that forward elimination (reduction to row echelon form) must've been performed on the matrix.
 
 ## Tests for matrix properties and special matrices
 
@@ -215,7 +220,7 @@ They support the following operations:
   * Single element indexing
   * Multiple element slicing (returns a list)
   * The subscriptions can also be assignment targets to change the element or elements of the matrix.
-  * Also, augmented assigment conterparts of operators supported by the matrix elements, update the elements of the matrix.
+  * Also, augmented assignment counterparts of operators supported by the matrix elements, update the elements of the matrix.
   * Augmented assignments won't work with Row/Column **slices** due to the fact that they return `list` objects.
   * Elements cannot be deleted.
 * Equality comparison
@@ -226,8 +231,11 @@ They support the following operations:
 * Row/column length with `len()`
 * Membership tests
 * Iteration through elements
-* Pivot index (**`Row` only**): implemented as instance method `pivot_index()`
-  * returns the index of the leading non-zero element.
+
+`Row` objects have one property:
+
+* `pivot_index` -> Pivot index.
+  * gets the **1-based** index of the **leading non-zero** (pivot) element on that row.
   * returns `0` (zero) for a zero-row.
 
 **NOTE** on Row/Column **arithmetic operations**:
@@ -250,6 +258,15 @@ The `Matrix` class implements a few other operations as methods. These operation
   * Pads with zeros when extending the matrix on either or both axes.
 * **staticmethod** `compare_rounded(m1, m2, [ndigits])` -> Rounded comparison
   * _ndigits_ is the same as for `round()`.
-  * Comapares two matrices as if the elements were rounded.
+  * Compares two matrices as if the elements were rounded.
   * Useful for comparing matrices of floating-point elements and is the method recommended for such.
 
+## Solutions to systems of linear equations
+
+This can be achieved in two ways using the package:
+
+* Gaussian Elimination: A convenience function `solve_linear_system()` is provided at the package's top-level for this.
+  * The  function accepts only two arguments, the matrix of coefficients and the matrix of constants and return a tuple containing the solution set.
+* Inverse method i.e `x = ~A @ b`.
+
+NOTE: The shouldn't be any much performance difference between the two means since the inverse operation also uses Gaussian Elimination.
