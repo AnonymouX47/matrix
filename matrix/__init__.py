@@ -11,12 +11,13 @@ Copyright 2021
 from random import randint, random, randrange
 
 from .matrix import Matrix, unit_matrix
+from . import utils  # Only meant to be used for `ROUND_LIMIT`
 from .utils import (MatrixException, BrokenMatrixView, InvalidDimension,
                     ZeroDeterminant)
 
 __all__ = ("Matrix", "MatrixException", "InvalidDimension", "BrokenMatrixView",
             "ZeroDeterminant", "unit_matrix", "randint_matrix", "random_matrix",
-            "solve_linear_system",
+            "solve_linear_system", "set_round_limit",
             )
 
 
@@ -118,4 +119,23 @@ def solve_linear_system(coeff: Matrix, const: Matrix):
         raise ValueError("There are no unique solutions for the system.") from err
 
     return (*augmented.columns[augmented.ncol],)
+
+
+def set_round_limit(ndigits: int):
+    """
+    Sets the global rounding/tolerance limit
+    i.e the value below which any value is considered zero.
+    This value is used to subdue floating-point issues in many operations.
+
+    Args:
+        - ndigits -> Number of decimal places after which
+        figures are considered insignificant.
+    Raises:
+        `TypeError` if the argument is not an integer.
+    """
+
+    if not isinstance(ndigits, int):
+        raise TypeError("The argument must be an integer.")
+
+    utils.ROUND_LIMIT = ndigits
 

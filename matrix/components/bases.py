@@ -5,6 +5,7 @@ from numbers import Real
 from operator import add, mul, truediv, sub
 
 from .elements import Element
+from .. import utils  # Only meant to be used for `ROUND_LIMIT`
 from ..utils import (display_adj_slice, is_iterable, mangled_attr,
                     slice_length, valid_container, BrokenMatrixView
                     )
@@ -268,8 +269,10 @@ class RowColumn:
 # Utility functions
 
 def _rounded(row_col: list) -> list:
+    limit = Element(f"1e-{utils.ROUND_LIMIT}")
+
     return [Element(round(x))
-                if abs(x - round(x)) < Element("1e-12")
+                if abs(x - round(x)) < limit
                 else x
             for x in row_col]
 

@@ -347,3 +347,9 @@ class ZeroDeterminant(MatrixException, ArithmeticError):
         super().__init__(*args)
         self.matrix = matrix
 
+
+# The number of decimal places after which figures are considered insignificant.
+# This value is used to subdue floating-point issues in many operations.
+# Any number with a magnitude below 1e-(ROUND_LIMIT) is considered a zero.
+ROUND_LIMIT = 12
+

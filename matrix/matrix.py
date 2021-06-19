@@ -6,6 +6,7 @@ from multiprocessing import Pool
 from operator import add, itemgetter, mul, sub
 
 from .components import *
+from . import utils  # Only meant to be used for `ROUND_LIMIT`
 from .utils import *
 
 __all__ = ("Matrix", "unit_matrix")
@@ -355,7 +356,7 @@ class Matrix:
         new.__array = [[element * other for element in row] for row in self.__array]
 
         # Due to floating-point limitations
-        new.__round(12)
+        new.__round()
 
         return new
 
@@ -390,7 +391,7 @@ class Matrix:
                         for row in self.__array]
 
         # Due to floating-point limitations
-        new.__round(12)
+        new.__round()
 
         return new
 
@@ -408,7 +409,7 @@ class Matrix:
         new.__array = [[element / other for element in row] for row in self.__array]
 
         # Due to floating-point limitations
-        new.__round(12)
+        new.__round()
 
         return new
 
@@ -639,7 +640,7 @@ class Matrix:
 
             # Any number with a magnitude below 'limit'
             # is considered a zero, due to floating-point limitations
-            limit = Element("1e-12")
+            limit = Element(f"1e-{utils.ROUND_LIMIT}")
 
             j = 0  # Row currenly being used to reduce those below it.
             # Column of pivot element on row j
@@ -681,7 +682,7 @@ class Matrix:
             self.reduce_upper_tri()
             self.flip_x(); self.flip_y()
 
-        self.__round(12)
+        self.__round()
 
     def reduce_upper_tri(self, *, as_square=False):
         """
@@ -707,7 +708,7 @@ class Matrix:
 
             # Any number with a magnitude below 'limit'
             # is considered a zero, due to floating-point limitations
-            limit = Element("1e-12")
+            limit = Element(f"1e-{utils.ROUND_LIMIT}")
 
             j = min_dim - 1  # Row currenly being used to reduce those above it.
             # Column of "reverse-pivot" element on row j
@@ -751,7 +752,7 @@ class Matrix:
             self.reduce_lower_tri()
             self.flip_x(); self.flip_y()
 
-        self.__round(12)
+        self.__round()
 
     def reduced_row_echelon(self):
         """Transforms the matrix to Reduced Row Echelon form"""
@@ -791,7 +792,6 @@ class Matrix:
 
         self.reduce_upper_tri(as_square=True)
 
-        limit = Element("1e-12")
         # Ensures the matrix is in reduced row echelon form.
         # The pivot on each row will be the diagonal element
         # since the matrix is non-singular and already reduced.
@@ -802,7 +802,7 @@ class Matrix:
                 array[i] = [x / d_i if x else Element(0) for x in array[i]]
 
         # Due to floating-point limitations
-        self.__round(12)
+        self.__round()
 
 
     ## Other operations
@@ -820,18 +820,15 @@ class Matrix:
         and is the method recommended for such.
 
         Args:
-            mat1, mat2 -> subject matrices
-            ndigits -> an integer, the number of decimal places from which any
-                difference is irrelevant.
+            - mat1, mat2 -> subject matrices
+            - ndigits -> an integer, the number of decimal places after which any
+            difference is irrelevant. Defaults to `ROUND_LIMIT` if not given.
         """
 
-        if not ndigits: return all(all(round(x) == round(y)
-                                        for x, y in zip(row1, row2)
-                                        )
-                                    for row1, row2 in zip(mat1.__array, mat2.__array)
-                                    )
-
-        limit = Element(f"1e-{ndigits}")
+        limit = Element(f"1e-{utils.ROUND_LIMIT}"
+                        if ndigits is None
+                        else f"1e-{ndigits}"
+                        )
 
         return all(all(abs(x - y) < limit for x, y in zip(row1, row2))
                     for row1, row2 in zip(mat1.__array, mat2.__array)
@@ -920,15 +917,24 @@ class Matrix:
         self.transpose()
         self.flip_x()
 
-    def __round(self, ndigits):
+    def __round(self, ndigits=None):
         """
         Rounds the elements of the matrix that should normally be integers,
         **in-place**.
 
+        Args:
+            - ndigits -> The number of decimal places after which
+            figures are considered insignifcant. Defaults to `ROUND_LIMIT`.
+
         NOTE: Meant for internal use only.
         """
 
-        limit = Element(f"1e-{ndigits}")
+        # Did not hard-code this to `ROUND_LIMIT`
+        # in case it needs to be used differently.
+        limit = Element(f"1e-{utils.ROUND_LIMIT}"
+                        if ndigits is None
+                        else f"1e-{ndigits}"
+                        )
         self.__array[:] = [[Element(round(x))
                                     if abs(x - round(x)) < limit
                                     else x
