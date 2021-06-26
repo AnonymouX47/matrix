@@ -112,9 +112,9 @@ def solve_linear_system(coeff: Matrix, const: Matrix):
         raise InvalidDimension("The input matrices are of inappropriate dimensions.")
 
     augmented = coeff | const
-    augmented.reduce_lower_tri()
+    augmented.forward_eliminate()
     try:
-        augmented.back_substitution()
+        augmented.back_substitute()
     except ZeroDeterminant as err:
         raise ValueError("There are no unique solutions for the system.") from err
 
