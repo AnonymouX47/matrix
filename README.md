@@ -62,6 +62,7 @@ This is just an outline of the major features of the library. For the complete f
 * Determinant
 * Principal diagonal
 * Trace
+* Rank
 
 ### Matrix Operations
 * Negation
@@ -74,10 +75,10 @@ This is just an outline of the major features of the library. For the complete f
 * Inverse
 * Transpose
 * Augmentation
-* Row reduction / forward elimination:
-  * Row echelon form
+* Row reduction
+  * Row Echelon form (Forward elimination)
   * Reduced Row Echelon form
-* Back Substitution
+  * Back substitution
 
 ### Tests for matrix properties and special matrices
 * Diagonality
@@ -120,7 +121,8 @@ These are views of the matrix object, like `.keys()` and `.values()` are to `dic
 * Rounded comparison
 
 ### Solutions to systems of linear equations
-* Gauss-Jordan Elimination
+* Gaussian elimination
+* Gauss-Jordan elimination
 * Inverse method
 
 
@@ -128,6 +130,8 @@ These are views of the matrix object, like `.keys()` and `.values()` are to `dic
 
 ### Requirements
 - Python 3.8
+
+### Steps
 
 Download and unzip this [repository](https://github.com/AnonymouX47/matrix/archive/refs/heads/main.zip) or run
 ```sh
@@ -190,7 +194,8 @@ If you find any bug or have any suggestion for an improvement, please create an 
 
 Please make sure you check other issues first to make sure you don't create a duplicate.
 
-The project is open to Pull Requests if you want to contribute to the code but please make sure you do test your changes or additions well enough.
+As much as this was originally a personal practice project, I could still **learn** from your **contributions**.
+The project is open to Pull Requests if you want to contribute to the code but please make sure you go through the [contribution guidelines](CONTRIBUTING.md) (don't worry, it's brief and not so strict :grinning:).
 
 
 ## TODO

@@ -1,11 +1,11 @@
-# Backup files
-*~
+# Add to these only if the entries are project-dependent
+# Anything dependent on your IDE or development process & environemnt should be excluded locally
+# i.e from either "$GIT_DIR/info/exclude" or "$XDG_CONFIG_HOME/git/ignore"
+# It helps to keep things simple, thanks.
+
 
 # Python module caches
 __pycache__/
-
-# Vim swap files
-.*.sw*
 
 # IPython notebook checkpoints
 .ipynb_checkpoints/
