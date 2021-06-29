@@ -794,7 +794,7 @@ class Matrix:
 
         if not all(row[i] for i, row in enumerate(array)):
             raise ZeroDeterminant(
-                        "The determinant of this matrix is zero.",
+                        "The determinant of the left square of this matrix is zero.",
                         matrix=self
                         ) from None
 

@@ -27,7 +27,7 @@ The Matrix class constructor accepts two forms of arguments:
    - If all rows have the same length, the matrix is initialized taking the array in row-major order.
    - If row lengths don't match but _zfill_ is `True`, the rows of the resulting matrix are padded with zeros to the right to match up.
 
-**NOTE:** The constructor arguments can only be passed positionally, not by name.
+**NOTE:** The constructor arguments can only be passed positionally, not by keyword.
 
 ### Using the provided utility functions
 
@@ -35,7 +35,7 @@ The library provided the following functions at the top level for generating mat
 1. `unit_matrix(n)`
    - Returns a "n by n" unit matrix.
 2. `randint_matrix(nrow, ncol, _range)`
-   - Returns a matrix with random integer elements where the third argument '_range' should be a `range` instance representing the range of integers from which the random elements are to be selected.
+   - Returns a matrix with random integer elements where the third argument ('_range') should be a `range` instance representing the range of integers from which the random elements are to be selected.
    - All arguments must be positional.
 3. `random_matrix(nrow, ncol, start, stop)`
    - Returns a matrix with random floating-point elements where:
@@ -119,6 +119,7 @@ The `Matrix` class provides the common matrix properties as object attributes:
   - Setting this attribute modifies the matrix i.e sets the diagonal elements.
 - `trace` -> Trace of the matrix
   - Raises an error for non-square matrices.
+- `rank` -> Rank of the matrix
 
 ## Matrix Operations
 
@@ -152,12 +153,14 @@ The augmented assignment counterparts of these binary operators are also support
   - `transposed()` -> Returns a transposed copy.
   - `transpose()`  -> Transposes the matrix **in-place**.
 - Row reduction (all **In-place**): Implemented as instance methods:
-  - `reduce_lower_tri()`  -> Transforms the matrix to row echelon form.
-  - `reduce_upper_tri()`  -> Reduces all elements in the upper triangle to zeros.
-  - `reduced_row_echelon()` -> Transforms the matrix to _reduced_ row echelon form.
-  - These also work for non-square matrices.
-- `back_substitution()` -> Back substitution (**in-place**).
-  - This operation **requires** that forward elimination (reduction to row echelon form) must've been performed on the matrix.
+  - `to_upper_triangular()`  -> Reduces a **square** matrix to an upper-triangular matrix.
+  - `to_lower_triangular()`  -> Reduces a **square** matrix to a lower-triangular matrix.
+  - `to_row_echelon()` -> Transforms the matrix to _row echelon_ form.
+  - `to_reduced_row_echelon()` -> Transforms the matrix to _reduced row echelon_ form.
+  - **Note:** The last two work on matrices of any shape.
+- `forward_eliminate()` -> Performs _forward elimination_ on an **horizontal** matrix, **in-place**.
+- `back_substitute()` -> Performs _back substitution_ on an **horizontal** matrix, **in-place**.
+  - This operation **requires** that _forward elimination_ must've been performed on the matrix.
 
 ## Tests for matrix properties and special matrices
 
@@ -244,7 +247,7 @@ They support the following operations:
 * Due to this difference,  if `row = m.rows[1]`, then `row += row` is very different from `row = row + row`.
   * In the former, the corresponding row (row 1) of the matrix _m_ is modified and _row_ references a **`Row`** instance after the operation.
   * While in the latter, the matrix row remains unchanged and _row_ references a **`list`** instance after the operation.
-  * The only exception to this behaviour is when using subscripts of the `Rows` or `Columns` instance directly e.g `m.rows[1] = m.rows[1] * 2` is the same as `m.rows[1] *= 2`
+  * The only exception to this behaviour is when using subscripts of the `Rows` or `Columns` instance directly e.g `m.rows[1] = m.rows[1] * 2` is equivalent to `m.rows[1] *= 2`, in terms of end results.
   * Same applies to `Column`.
 
 ## Other operations on matrices
