@@ -6,6 +6,6 @@ This is the home of the project documentation.
 
 ## Sections
 
-- [Features](features.md): List of the features provided in the package.
-- [Reference](reference.md): Full details of the project implementation.
+- [Feature Description](features/index.md): List and brief description of the features provided by the package.
+- [Reference](reference.md): Details of the project implementation.
 

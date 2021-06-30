@@ -177,7 +177,7 @@ Quick example:
 
 For more usage examples, check the [samples](samples/).
 
-For the complete feature list and descriptions, see [Features](https://anonymoux47.github.io/matrix/features.html).
+For the complete feature list and descriptions, see [Feature Description](https://anonymoux47.github.io/matrix/features/).
 
 
 ## Uninstallation
