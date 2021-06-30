@@ -8,7 +8,7 @@ License: GPLv3.0
 Copyright 2021
 """
 
-from random import randint, random, randrange
+from random import choices, random, randrange
 
 from .matrix import Matrix, unit_matrix
 from . import utils  # Only meant to be used for `ROUND_LIMIT`
@@ -52,11 +52,9 @@ def randint_matrix(nrow: int, ncol: int, _range, /):
     if nrow < 1 or ncol < 1:
         raise ValueError("Matrix dimensions must be greater than zero.")
 
-    _range = (_range.start, _range.stop, _range.step)
     try:
-        matrix = Matrix((randrange(*_range)
-                        for _ in range(ncol)) for _ in range(nrow))
-    except ValueError:
+        matrix = Matrix(choices(_range, k=ncol) for _ in range(nrow))
+    except IndexError:
         raise ValueError("The given range is empty.") from None
 
     return matrix
