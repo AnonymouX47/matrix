@@ -4,11 +4,14 @@ from decimal import Decimal
 from functools import partial
 from numbers import Real
 
-from ..utils import *
+from ..utils import (adjust_slice, slice_length, slice_index, original_slice,
+                    valid_container, MatrixIter, InvalidDimension,
+                    )
 from .bases import *
 from .elements import to_Element
 
 __all__ = ("Columns",)
+
 
 @RowsColumns._register
 class Columns(RowsColumns):

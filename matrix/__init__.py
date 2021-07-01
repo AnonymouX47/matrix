@@ -10,7 +10,7 @@ Copyright 2021
 
 from random import choices, random, randrange
 
-from .matrix import Matrix, unit_matrix
+from .matrix import *
 from . import utils  # Only meant to be used for `ROUND_LIMIT`
 from .utils import (MatrixException, BrokenMatrixView, InvalidDimension,
                     ZeroDeterminant)

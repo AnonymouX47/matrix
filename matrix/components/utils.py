@@ -6,6 +6,8 @@ Most importantly created to prevent circular imports.
 
 from operator import setitem
 
+__all__ = ("MethodDecoMeta",)
+
 
 class MethodDecoMeta(type):
     """

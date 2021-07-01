@@ -7,7 +7,7 @@ An instance of the `Matrix` class is a **mutable** object modelling a mathematic
 
 Every matrix element is an instance of a subclass (`Element`) of python's `decimal.Decimal` so they support all operations and methods implemented by `decimal.Decimal` but the subclass, `Element` implements support for inter-operation with `float` instances.
 
-Even though a `Matrix` instance mutable, it provides a few methods that return a new matrix instance.
+Even though a `Matrix` instance is mutable, it provides a few methods that return a new matrix instance.
 
 For demonstrations of the features described here, see the [sample files](https://github.com/AnonymouX47/matrix/tree/main/samples).
 

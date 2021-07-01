@@ -6,5 +6,5 @@ This can be achieved in two ways using the package:
   * The  function accepts only two arguments, the matrix of coefficients and the matrix of constants and return a tuple containing the solution set.
 * Inverse method i.e `x = ~A @ b`.
 
-NOTE: The shouldn't be any much performance difference between the two means since the inverse operation also uses Gaussian Elimination.
+NOTE: There shouldn't be any much performance difference between the two means since the inverse operation also uses Gaussian Elimination.
 

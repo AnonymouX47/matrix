@@ -4,11 +4,14 @@ from math import prod
 from multiprocessing import Pool
 from operator import add, itemgetter, mul, sub
 
-from .components import *
+from .components import Element, to_Element, Rows, Columns
 from . import utils  # Only meant to be used for `ROUND_LIMIT`
-from .utils import *
+from .utils import (adjust_slice, slice_length, valid_2D_iterable, valid_container,
+                    is_iterable, mangled_attr, InvalidDimension, ZeroDeterminant,
+                    )
 
 __all__ = ("Matrix", "unit_matrix")
+
 
 @mangled_attr(_del=False)
 class Matrix:

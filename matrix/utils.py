@@ -16,7 +16,7 @@ def display_slice(s: slice):
                             f":{s.step}" if s.step is not None else '')
 
 def display_adj_slice(s: slice):
-    """Returns a colon-separated string representation of a slice."""
+    """Returns a colon-separated string representation of an adjusted slice."""
 
     return "{}:{}{}".format(s.start + 1, s.stop, f":{s.step}" if s.step > 1 else '')
 
