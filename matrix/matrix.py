@@ -1,4 +1,4 @@
-"""Definitions of the various classes."""
+"""Definitions for the main matrix class."""
 
 from math import prod
 from multiprocessing import Pool
@@ -29,15 +29,10 @@ class Matrix:
 
     - Given a 2-D iterable of real numbers:
       - `Matrix(array: iterable, zfill: bool = False)`
-      - If all rows have the same length, the matrix is initialized
-      taking the array in row-major order.
-      - If row lengths don't match but _zfill_ is `True`,
-      the rows of the resulting matrix are padded with zeros
-      to the right to match up.
+      - If all rows have the same length, the matrix is initialized taking the array in row-major order.
+      - If row lengths don't match but _zfill_ is `True`, the rows of the resulting matrix are padded with zeros to the right to match up.
 
-    NOTE: All in-place operations guarantee that the outer underlying
-    list object will not change in an instance's lifetime, though the nested
-    ones will, depending on the operation performed.
+    NOTE: All in-place operations guarantee that the outer underlying list object will not change in an instance's lifetime, though the nested ones will, depending on the operation performed.
     """
 
     # mainly to disable abitrary atributes.
@@ -56,8 +51,8 @@ class Matrix:
                 self.__array = [[Element(0)] * cols for _ in range(rows)]
                 self.__nrow, self.__ncol = rows, cols
             else:
-                raise InvalidDimension(
-                        "Matrix dimensions must be greater than zero.")
+                raise InvalidDimension("Matrix dimensions must be greater than zero.")
+
         elif is_iterable(rows_array) and isinstance(cols_zfill, (type(None), bool)):
             minlen, maxlen, self.__nrow, array = valid_2D_iterable(rows_array)
 
@@ -72,14 +67,13 @@ class Matrix:
                 self.resize(ncol=maxlen, pad_rows=True)
             else:
                 raise ValueError("'zfill' should be `True`"
-                                " when the array has variable row lengths.")
+                                 " when the array has variable row lengths.")
         else:
             raise TypeError("Constructor arguments must either be two positive integers"
                             " OR a 2D iterable of real numbers and an optional boolean.")
 
         self.__rows = Rows(self)
         self.__columns = Columns(self)
-
 
     def __repr__(self):
 
