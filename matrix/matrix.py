@@ -1,7 +1,9 @@
 """Definitions for the main matrix class."""
 
+from decimal import Decimal
 from math import prod
 from multiprocessing import Pool
+from numbers import Real
 from operator import add, itemgetter, mul, sub
 
 from .components import Element, to_Element, Rows, Columns
@@ -109,19 +111,22 @@ class Matrix:
     def __getitem__(self, sub):
         """
         Returns:
-        - element at given position, if `sub` is a tuple of integers `(row, col)`.
-          e.g `matrix[1, 2]`
-          - Indices must be in range
-        - a new Matrix instance, if `sub` is a tuple of slices.
-          e.g `matrix[::2, 3:4]`
+        - element at the given coordinate, if `sub` is a tuple of integers `(row, col)`.
+          - e.g `matrix[1, 2]`
+          - Indices less than 1 are not allowed
+        - a new `Matrix` instance, if `sub` is a tuple of slices.
+          - e.g `matrix[::2, 3:4]`
           - the first slice selects rows.
           - the second slice selects columns.
           - any 'stop' greater than the number of rows/columns is "forgiven".
-          - any 'step' less than 1 is not allowed.
+          - Indices or steps less than 1 are not allowed.
 
-        NOTE:
-          - Both rows and columns are **indexed starting from `1`**.
-          - A **slice includes `stop`**.
+        Raises:
+        - `IndexError`, if the subscript is a tuple of integers with either or both out of range.
+        - `TypeError`, if the subscript type or combination is wrong.
+        - Also propagates errors raised by `adjust_slice()` from `.utils`.
+
+        NOTE: Both rows and columns are **indexed starting from `1`** and a **slice includes the stop**.
         """
 
         if isinstance(sub, tuple) and len(sub) == 2:
@@ -130,29 +135,32 @@ class Matrix:
                 row, col = sub
                 if 0 < row <= self.__nrow and 0 < col <= self.__ncol:
                     return self.__array[row - 1][col - 1]
-                else:
-                    raise IndexError("Row and/or Column index is/are out of range.")
+                raise IndexError("Row and/or Column index is/are out of range.")
 
             elif all(isinstance(x, slice) for x in sub):
                 row_slice, col_slice = map(adjust_slice, sub, self.size)
                 return type(self)(row[col_slice] for row in self.__array[row_slice])
 
-            else:
-                raise TypeError(
-                        "Matrixes only support subscription of elements or submatrices.")
-        else:
             raise TypeError(
-                "Subscript element must be a tuple of integers or slices\n"
-                "\t(with or without parenthesis).") from None
+                    "Matrixes only support subscription of elements or submatrices.")
+        raise TypeError("Subscript must be a tuple of integers or slices\n"
+                        "\t(with or without parenthesis).")
 
     def __setitem__(self, sub, value):
         """
-        Subscript is interpreted just as for get operation.
+        The subscript is interpreted just as for get operation.
 
-        'value' must be:
-        - an integer, if 'sub' references an element.
-        - a Matrix instance or 2D array of real numbers with appropriate dimensions,
-          if 'sub' references a "block-slice".
+        _value_ must be:
+        - an integer, if 'sub' represents an element, or
+        - a Matrix instance or 2D array of real numbers with appropriate dimensions, if 'sub' represents a "block-slice".
+
+        Raises:
+        - `IndexError`, if the subscript is a tuple of integers with either or both out of range.
+        - `TypeError`, if:
+          - the subscript type or combination is wrong.
+          - the value assigned is of a type innapropriate for the subscription type.
+        - `matrix.InvalidDimension`, if the array assigned to a block-slice is of incomapatible dimension.
+        - Also propagates errors raised by `adjust_slice()` and `valid_2D_iterable()` from `.utils`.
         """
 
         if isinstance(sub, tuple) and len(sub) == 2:
@@ -164,7 +172,7 @@ class Matrix:
                         self.__array[row - 1][col - 1] = to_Element(value)
                     else:
                         raise TypeError("Matrix elements can only be real numbers,"
-                                f" not {type(value).__name__!r} objects.")
+                                        f" not {type(value).__name__!r} objects.")
                 else:
                     raise IndexError("Row and/or Column index is/are out of range.")
 
@@ -174,29 +182,27 @@ class Matrix:
                 if isinstance(value, __class__):
                     array = value.__array
                     checks = (value.__ncol == slice_length(col_slice)
-                                and value.__nrow == slice_length(row_slice)
-                                )
+                              and value.__nrow == slice_length(row_slice)
+                             )
                 else:
                     minlen, maxlen, nrow, array = valid_2D_iterable(value)
                     checks = (minlen == maxlen
-                                and maxlen == slice_length(col_slice)
-                                and nrow == slice_length(row_slice)
-                                )
+                              and maxlen == slice_length(col_slice)
+                              and nrow == slice_length(row_slice)
+                             )
 
                 if checks:
                     for row, _row in zip(self.__array[row_slice], array):
                         row[col_slice] = _row
                 else:
-                    raise ValueError("The array is not of an appropriate dimension"
-                                     " for the given block-slice.")
+                    raise InvalidDimension("The array is not of an appropriate dimension"
+                                           " for the given block-slice.")
             else:
                 raise TypeError(
-                    "Matrixes only support subscription of elements or submatrices.")
+                        "Matrixes only support subscription of elements or submatrices.")
         else:
-            raise TypeError(
-                "Subscript element must be a tuple of integers or slices"
-                " (with or without parenthesis).") from None
-
+            raise TypeError("Subscript must be a tuple of integers or slices"
+                            " (with or without parenthesis).")
 
     def __iter__(self):
         """

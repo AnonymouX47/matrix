@@ -81,3 +81,48 @@ class TestObjectInteractions:
             length = len(lines[0])
             assert all(len(line) == length for line in lines)
 
+    def test_getitem(self):
+        m = Matrix(4, 4)
+        arr = m._array
+        # Single element
+        assert isinstance(m[1, 4], Element)
+        assert all(m[i+1, j+1] == arr[i][j] for i in range(4) for j in range(4))
+        ## Out of range indices
+        for sub in ((3, 0), (2, 5), (0, 3), (5, 2)):
+            with pytest.raises(IndexError, match=".* Column .*"):
+                m[sub]
+        # Block-slice
+        copy = m[:, :]
+        assert isinstance(copy, Matrix)
+        assert copy._array == m._array
+        # Wrong subscript types
+        for sub in (3, (2, 3.0), (3, 3, 3), (3, slice(None)), [2, 3]):
+            with pytest.raises(TypeError):
+                m[sub]
+
+    def test_setitem(self):
+        m = Matrix(4, 4)
+        # Single element
+        m[1, 1] = 20
+        assert m[1, 1] == 20
+        ## Wrong element types
+        for elem in (2j, '2', [2], (2,)):
+            with pytest.raises(TypeError, match=".* real numbers, .*"):
+                m[2, 2] = elem
+        ## Out of range indices
+        for sub in ((3, 0), (2, 5), (0, 3), (5, 2)):
+            with pytest.raises(IndexError, match=".* Column .*"):
+                m[sub] = 0
+        # Block-slice
+        m[:2, :2] = [[20, 20]] * 2
+        arr = m._array
+        assert [arr[0][:2], arr[1][:2]] == [[20, 20]] * 2
+        # Wrong subscript types
+        for sub in (3, (2, 3.0), (3, 3, 3), (3, slice(None)), [2, 3]):
+            with pytest.raises(TypeError):
+                m[sub] = 0
+        # Incompatible dimension
+        with pytest.raises(InvalidDimension):
+            for array in ([[]], [2, 2], [[2, 2]], [[2], [2]], [[2, 0], [2]]):
+                m[:2, :2] = array
+
