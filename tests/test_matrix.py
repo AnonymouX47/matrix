@@ -65,3 +65,19 @@ class TestInit:
             assert all(len(row) == ncol and not any(row[i:])
                        for i, row in zip(lengths, m._array))
 
+
+class TestObjectInteractions:
+    def test_str(self):
+        # Lines of the string representation must have uniform length
+        for _ in range(50):
+            ncol = randint(1, 100)
+            m = Matrix(
+                        (
+                          (randint(0, 1000000) for _ in range(ncol))
+                          for _ in range(randint(1, 100))
+                        )
+                      )
+            lines = str(m).splitlines()
+            length = len(lines[0])
+            assert all(len(line) == length for line in lines)
+

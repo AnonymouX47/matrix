@@ -81,7 +81,6 @@ class Matrix:
                 f"{type(self).__name__} at {id(self):#x}>")
 
     def __str__(self):
-
         # Element with longest str() in a column determines that column's width.
 
         # Format each element
@@ -89,7 +88,7 @@ class Matrix:
 
         # Get lengths of longest formatted strings in each column
         column_widths = [max(map(len, map(itemgetter(i), rows_strs)))
-                        for i in range(self.__ncol)]
+                         for i in range(self.__ncol)]
 
         # Generate the format_spec for each column
         # specifying the width (plus a padding of 2) and center-align
@@ -98,13 +97,14 @@ class Matrix:
         # (column widths + one plus and two padding spaces per column - one plus)
         bar = '+' + '\u2015' * (sum(column_widths) + self.__ncol * 3 - 1) + '+'
         mid_bar = ( '|' + '+'.join('\u2015' * (width + 2)
-                                    for width in column_widths) + '|')
+                                   for width in column_widths) + '|')
 
         return (bar
-        + ('\n' + mid_bar).join('\n|' + '|'.join(map(format, row, fmt_strs)) + '|'
-                                for row in rows_strs)
-        + '\n' + bar)
-
+                + ('\n'+mid_bar).join('\n|' + '|'.join(map(format, row, fmt_strs)) + '|'
+                                      for row in rows_strs
+                                     )
+                + '\n' + bar
+               )
 
     def __getitem__(self, sub):
         """
