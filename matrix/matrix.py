@@ -78,7 +78,6 @@ class Matrix:
         self.__columns = Columns(self)
 
     def __repr__(self):
-
         return (f"<{self.__nrow}x{self.__ncol} "
                 f"{type(self).__name__} at {id(self):#x}>")
 
@@ -206,11 +205,17 @@ class Matrix:
 
     def __iter__(self):
         """
-        Returns a generator that yields the *elements* of the matrix.
-        Raises a `RuntimeError` if the matrix is resized during iteration.
+        Iteration over individual elements of the natrix.
 
-        The generator can be set to any vaild row and column of the matrix
-        from which to continue iteration using the send() method.
+        Returns: a generator that yields the elements of the matrix.
+        Raises: `RuntimeError`, if the matrix is resized during iteration.
+
+        The generator can be set to any vaild row and column of the matrix from which to continue iteration using it's send() method.
+        The send method accepts:
+        - an integer -> sets the iteration to the first element of the row with the given index.
+        - a tuple of integers -> sets the iteration to the element with the given coordinate.
+        In both cases, the method returns that element immediately, such that the next element to be yielded by the generator will be the one following the position specified.
+        If indices out of range or wrong types are given, the generator immediately raises `StopIteration` with a message explaining the cause.
 
         NOTE:
         1. Recall that the matrix is *1-indexed* when using the send method.
@@ -219,29 +224,31 @@ class Matrix:
            - cos it's purpose can simply be achieved thus, with better performace.
         """
 
-        size = self.size  # for comparison during iteration
+        nrow, ncol = self.__nrow, self.__ncol  # for comparison during iteration
+        array = self.__array
         r = 0
-        while r < self.__nrow:
+        while r < nrow:
             c = 0
-            row = self.__array[r]
-            while c < self.__ncol:
+            row = array[r]
+            while c < ncol:
                 r_c = (yield row[c])
 
-                if size != self.size:
-                    raise RuntimeError(
-                                    "The matrix was resized during iteration.",
-                                    view_obj=self)
+                if nrow != self.__nrow or ncol != self.__ncol:
+                    raise RuntimeError("The matrix was resized during iteration.")
 
                 if r_c is not None:
-                    if isinstance(r_c, tuple) and len(r_c) == 2:
+                    if (isinstance(r_c, tuple)
+                        and len(r_c) == 2
+                        and all(isinstance(x, int) for x in r_c)
+                       ):
                         # It's the only way to prevent a -ve or zero index
-                        if not (0 < r_c[0] <= self.__nrow and 0 < r_c[1] <= self.__ncol):
+                        if not (0 < r_c[0] <= nrow and 0 < r_c[1] <= ncol):
                             return "Coordinate out of range."
                         r, c = r_c[0] - 1, r_c[1] - 2
-                        row = self.__array[r]
+                        row = array[r]
                     elif isinstance(r_c, int):
                         # It's the only way to prevent a -ve or zero index
-                        if r_c < 1:
+                        if not (1 <= r_c <= nrow):
                             return "Row index out of range."
                         r = r_c - 2
                         break

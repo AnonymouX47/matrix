@@ -126,3 +126,52 @@ class TestObjectInteractions:
             for array in ([[]], [2, 2], [[2, 2]], [[2], [2]], [[2, 0], [2]]):
                 m[:2, :2] = array
 
+    def test_iter(self):
+        m = randint_matrix(4, 4, range(1, 10))
+        # Generator yields elements
+        for elem in m: assert isinstance(elem, Element)
+        # All elements
+        assert len((*m,)) == m.nrow * m.ncol
+        assert [*m] == sum(m._array, start=[])
+        # Resize during iteration
+        m_iter = iter(m)
+        next(m_iter)
+        m.resize(ncol=3)
+        with pytest.raises(RuntimeError, match=".* resized .*"):
+            next(m_iter)
+
+        # Advanced use
+        m = Matrix([[1, 2, 3],
+                    [4, 5, 6],
+                    [7, 8, 9]]
+                  )
+        m_iter = iter(m)
+        next(m_iter)
+        ## Setting row
+        assert m_iter.send(2) == m[2, 1]
+        assert next(m_iter) == m[2, 2]
+        assert all(m_iter.send(r) == m[r, 1] for r in range(1, m.nrow+1))
+        ## Setting row and column
+        assert m_iter.send((1, 3)) == m[1, 3]
+        assert next(m_iter) == m[2, 1]
+        assert all(m_iter.send((r, c)) == m[r, c]
+                    for r in range(1, m.nrow+1)
+                        for c in range(1, m.ncol+1))
+        ## Out of range indices
+        for arg in (-1, 0, 4):
+            with pytest.raises(StopIteration, match="Row index .*"):
+                m_iter = iter(m)
+                next(m_iter)
+                m_iter.send(arg)
+        for arg in ((4, 3), (1, 0), (-1, 4), (0, 4)):
+            with pytest.raises(StopIteration, match="Coordinate .*"):
+                m_iter = iter(m)
+                next(m_iter)
+                m_iter.send(arg)
+        ## Wrong type
+        for arg in (3.0, (2, 3.0), (2.0, 3), (2.0, 3.0), [1, 2], '2'):
+            with pytest.raises(StopIteration, match="Wrong type .*"):
+                m_iter = iter(m)
+                next(m_iter)
+                m_iter.send(arg)
+
