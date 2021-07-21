@@ -81,7 +81,7 @@ class Element(Decimal,
 
 def to_Element(value):
     """
-    Converts a `float` instance to an `Element` instance in "the best way possible".
+    Converts a number to an `Element` instance in "the best way possible".
 
     This is required majorly to:
     - ensure better correctness and accuracy of future operations between the converted element and other elements.
@@ -91,8 +91,15 @@ def to_Element(value):
     and "weird" results produced by `decimal.Decimal`'s default `float` conversion.
     """
 
-    if isinstance(value, float) and not value.is_integer():
-        value = str(value)
+    # Importing `..utils` while loading this module will result in circular import
+    # since `..utils` imports [this function] from this module.
+    from ..utils import ROUND_LIMIT
 
-    return Element(value)
+    limit = Element(f"1e-{ROUND_LIMIT}")
+    if isinstance(value, float) and not value.is_integer():
+        value = Element(str(value))
+    elif isinstance(value, str):
+        value = Element(value)
+
+    return Element(round(value) if 0 < abs(value - round(value)) < limit else value)
 

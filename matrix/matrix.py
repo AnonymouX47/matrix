@@ -269,8 +269,9 @@ class Matrix:
         item = to_Element(item)
         return any(item in row for row in self.__array)
 
-    def __round__(self, ndigits=None):
+    def __round__(self, ndigits=0):
         """Applies the specified rounding to each matrix element."""
+        # _ndigits_ is `0` by default to ensure elements remain of type `Element`.
 
         new = __class__(*self.size)
         new.__array = [[round(x, ndigits) for x in row] for row in self.__array]
@@ -760,8 +761,7 @@ class Matrix:
 
             # Reduce elements above pivots to zeros.
             for i in range(j-1, -1, -1):
-                # No need to used 'ROUND_LIMIT' since matrix has been
-                # previously rounded.
+                # No need to use 'ROUND_LIMIT' since matrix has been previously rounded.
                 # No need to divide array[i][k] by the pivot for the
                 # multiplier since all pivots are already 1s.
                 # Row operation is redundant if array[i][k] is zero.
@@ -1156,7 +1156,7 @@ def _round(matrix, ndigits=None):
     limit = Element(f"1e-{utils.ROUND_LIMIT if ndigits is None else ndigits}")
     array = matrix._array
     array[:] = [[Element(round(x))
-                    if abs(x - round(x)) < limit
+                    if 0 < abs(x - round(x)) < limit
                     else x
                 for x in row]
             for row in array]

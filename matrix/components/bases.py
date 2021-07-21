@@ -275,7 +275,7 @@ def _rounded(row_col: list) -> list:
     limit = Element(f"1e-{utils.ROUND_LIMIT}")
 
     return [Element(round(x))
-                if abs(x - round(x)) < limit
+                if 0 < abs(x - round(x)) < limit
                 else x
             for x in row_col]
 

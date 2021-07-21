@@ -66,6 +66,11 @@ class TestInit:
                        for i, row in zip(lengths, m._array))
 
 
+m = Matrix([[1, 2, 3],
+            [4, 5, 6],
+            [7, 8, 9]]
+          )
+
 class TestObjectInteractions:
     def test_str(self):
         # Lines of the string representation must have uniform length
@@ -156,7 +161,8 @@ class TestObjectInteractions:
         assert next(m_iter) == m[2, 1]
         assert all(m_iter.send((r, c)) == m[r, c]
                     for r in range(1, m.nrow+1)
-                        for c in range(1, m.ncol+1))
+                        for c in range(1, m.ncol+1)
+                  )
         ## Out of range indices
         for arg in (-1, 0, 4):
             with pytest.raises(StopIteration, match="Row index .*"):
@@ -174,4 +180,35 @@ class TestObjectInteractions:
                 m_iter = iter(m)
                 next(m_iter)
                 m_iter.send(arg)
+
+    def test_membership(self):
+        assert all(elem in m for elem in range(1, 10))
+        for x in ('1', 'b', int, [1], [1, 2, 3], (1,)):
+            with pytest.raises(TypeError):
+                x in m
+
+    def test_round(self):
+        assert m is not +m
+        assert m._array == m._array
+        assert m._array is not (+m)._array
+        assert all(isinstance(elem, Element) for elem in round(m))
+
+    def test_pos(self):
+        assert m is not +m
+        assert m._array == m._array
+        assert m._array is not (+m)._array
+
+    def test_neg(self):
+        assert all(x == -y
+                    for r1, r2 in zip(m._array, (-m)._array)
+                        for x, y in zip(r1, r2)
+                  )
+    def test_bool(self):
+        assert not bool(Matrix(1, 1))
+        for _ in range(50):
+            assert not Matrix(randint(1, 1001), randint(1, 1001))
+        for _ in range(50):
+            m = Matrix(randint(1, 1001), randint(1, 1001))
+            m[1, 1] = 1
+            assert m
 
