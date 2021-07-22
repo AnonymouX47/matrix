@@ -16,7 +16,10 @@ def display_slice(s: slice):
                             f":{s.step}" if s.step is not None else '')
 
 def display_adj_slice(s: slice):
-    """Returns a colon-separated string representation of an adjusted slice."""
+    """
+    Returns a 1-based, colon-separated string representation of an **adjusted** slice.
+    Expects slice objects returned by `adjust_slice()`.
+    """
 
     return "{}:{}{}".format(s.start + 1, s.stop, f":{s.step}" if s.step > 1 else '')
 
@@ -29,14 +32,17 @@ def adjust_slice(s: slice, length: int) -> slice:
 
     if any(None is not x < 1 for x in (s.start, s.stop, s.step)):
         raise ValueError("%r -> 'start', 'stop' or 'step' is less than 1."
-                        % display_slice(s))
-    if s.stop is None:
-        if None is not s.start > length:
+                         % display_slice(s))
+    if s.stop is None:  # 'stop' is not given...
+        # Can't combine these two conditions,
+        # so as not to affect the logic of the `elif` below.
+        if None is not s.start > length:  # ...but 'start' is given and > `length`
             raise ValueError("%r -> 'start' of slice is out of range (max: %d)."
-                            % (display_slice(s), length))
+                             % (display_slice(s), length))
     elif None is not s.start > s.stop:
+        # 'stop' is given and ('start' is given and > 'stop')
         raise ValueError("'start' > 'stop' in slice %r."
-                        % display_slice(s))
+                         % display_slice(s))
 
     s = s.indices(length)
 
@@ -71,8 +77,8 @@ def original_slice(s1: slice, s2: slice):
     """
 
     return slice(slice_index(s1, s2.start),
-                slice_index(s1, s2.stop-1) + 1,
-                s1.step * s2.step
+                 slice_index(s1, s2.stop-1) + 1,
+                 s1.step * s2.step
                 )
 
 
@@ -122,6 +128,7 @@ def valid_container(iterable, length=None):
 
 def is_iterable(obj):
     """Checks if obj is iterable."""
+
     try:
         iter(obj)
     except TypeError:
