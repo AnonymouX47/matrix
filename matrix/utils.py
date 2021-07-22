@@ -18,16 +18,23 @@ def display_slice(s: slice):
 def display_adj_slice(s: slice):
     """
     Returns a 1-based, colon-separated string representation of an **adjusted** slice.
-    Expects slice objects returned by `adjust_slice()`.
+
+    Args:
+        - _s_ _ -> a slice object, as returned by `adjust_slice()`.
     """
 
     return "{}:{}{}".format(s.start + 1, s.stop, f":{s.step}" if s.step > 1 else '')
+
 
 def adjust_slice(s: slice, length: int) -> slice:
     """
     Changes a slice for a 1-indexed sequence to the equivalent 0-index form.
 
-    'stop' is the length of the sequence for which the slice is being adjusted.
+    Args:
+        - _s_ -> the slice to be adjusted.
+        - _length_ -> the length of the sequence for which the slice is being adjusted.
+    Raises:
+        - `ValueError`, if any index or 'step' is less than 1 or 'start' is out of range.
     """
 
     if any(None is not x < 1 for x in (s.start, s.stop, s.step)):
@@ -46,7 +53,7 @@ def adjust_slice(s: slice, length: int) -> slice:
 
     s = s.indices(length)
 
-    # Leaves the 'stop' attribute unchanged
+    # Leaves the 'stop' attribute unchanged,
     # since matrixes include the (1-indexed) 'stop' index for slicing operations.
     return slice(max(0, s[0]-1), *s[1:])
 
@@ -59,10 +66,11 @@ def slice_length(s: slice):
 
 def slice_index(s: slice, index: int):
     """
-    's' -> An adjusted slice for a sequence.
-    'index' -> A (0-based) index of the sequence produced by 's'.
+    Args:
+        - _s_ -> An adjusted slice for a sequence.
+        - _index_ -> A (0-based) index of the sequence produced by _s_.
 
-    Returns the equivaluent of 'index' for the original sequence sliced by 's'.
+    Returns: the equivaluent of _index_ for the original sequence sliced by _s_.
     """
 
     return s.start + index * s.step
@@ -70,10 +78,11 @@ def slice_index(s: slice, index: int):
 
 def original_slice(s1: slice, s2: slice):
     """
-    's1' -> An adjusted slice for a sequence.
-    's2' -> An adjusted slice of the sequence produced by 's1'.
+    Args:
+        - _s1_ -> An adjusted slice for a sequence.
+        - _s2_ -> An adjusted slice of the sequence produced by _s1_.
 
-    Returns the equivalent of 's2' for the original sequence sliced by 's1'.
+    Returns: the equivalent of _s2_ for the original sequence sliced by _s1_.
     """
 
     return slice(slice_index(s1, s2.start),
@@ -84,7 +93,7 @@ def original_slice(s1: slice, s2: slice):
 
 def valid_2D_iterable(iterable):
     """
-    Checks if `iterable` represents a two dimensional array of real numbers.
+    Checks if _iterable_ represents a two dimensional array of real numbers.
 
     If so, returns the
     - shortest row lenght,
