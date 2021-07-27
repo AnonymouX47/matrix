@@ -1,9 +1,9 @@
 #! /usr/bin/env pytest
 
-from random import randint
 import pytest
 
 from matrix.utils import *
+from matrix.components.elements import Element, to_Element
 
 
 def test_display_slice():
@@ -91,4 +91,56 @@ def test_is_iterable():
         assert is_iterable(obj)
     for obj in (2, 2., 2j):
         assert not is_iterable(obj)
+
+def test_valid_container():
+    it = range(5)
+    for iterable in (it, list(it), tuple(it), (x for x in it)):
+        it_ = valid_container(iterable)
+        assert len(it) == len(it_)
+        assert all(isinstance(x, Element) for x in it_)
+        assert all(to_Element(x) == y for x, y in zip(it, it_))
+    it = (5, 7.9, Element(6.9))
+    for iterable in (it, list(it), (x for x in it)):
+        it_ = valid_container(iterable)
+        print(it, it_)
+        assert len(it) == len(it_)
+        assert all(isinstance(x, Element) for x in it_)
+        # Excludes the gen_exp
+        assert all(to_Element(x) == y for x, y in zip(it, it_))
+    assert valid_container(range(2), 2)
+    # Errors
+    for x in (2, ['2']):
+        with pytest.raises(TypeError):
+            valid_container(x)
+    with pytest.raises(ValueError):
+        valid_container([2, 3], 3)
+
+def test_valid_2D_iterable():
+    it = [
+           (5, 7.9, Element(6.9)),
+           range(5),
+           [],
+           (x for x in range(10)),
+         ]
+    result = valid_2D_iterable(it)
+
+    assert len(result) == 4
+    assert result[0] == 0
+    assert result[1] == 10
+    assert result[2] == 4
+    assert isinstance(result[3], list)
+    assert all(isinstance(row, list) for row in result[3])
+    assert all(
+                # Excludes the gen_exp
+                all(to_Element(x) == y for x, y in zip(r1, r2))
+                for r1, r2 in zip(it, result[3])
+              )
+    # Errors
+    for arg in (12, [[2], 2]):
+        with pytest.raises(TypeError, match=".* iterable of iterables."):
+            valid_2D_iterable(arg)
+    with pytest.raises(TypeError, match=".* inner iterables."):
+        valid_2D_iterable([(2, 3.0), [2j, 2.0]])
+    with pytest.raises(ValueError, match=".* empty."):
+        valid_2D_iterable([])
 

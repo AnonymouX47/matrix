@@ -95,11 +95,16 @@ def valid_2D_iterable(iterable):
     """
     Checks if _iterable_ represents a two dimensional array of real numbers.
 
-    If so, returns the
-    - shortest row lenght,
-    - longest row lenght,
-    - number of rows,
-    - resulting array as a list of matrix elements.
+    Returns:
+        - shortest row lenght,
+        - longest row lenght,
+        - number of rows,
+        - resulting array as a list of matrix elements.
+    Raises:
+        -`TypeError`, if:
+          - _iterable_ or at least one of its items is not iterable.
+          - the inner iterables contain non-real-number types.
+        - `ValueError`, if _iterable_ is empty.
     """
 
     try:
@@ -112,7 +117,7 @@ def valid_2D_iterable(iterable):
             raise TypeError("The inner iterables must contain real numbers only.")
         lengths = [len(row) for row in array]
     else:
-        raise TypeError("The given iterable is empty.")
+        raise ValueError("The given iterable is empty.")
 
     return (min(lengths), max(lengths), len(array),
             [[to_Element(x) for x in row] for row in array])
@@ -120,9 +125,14 @@ def valid_2D_iterable(iterable):
 
 def valid_container(iterable, length=None):
     """
-    Checks if 'iterable' is a valid container of matrix elements, of size 'length'.
+    Checks if _iterable_ is a valid container of matrix elements and of size _length_.
 
-    If so, returns a list of matrix elements derived from 'iterable'.
+    Returns: a list of matrix elements derived from _iterable_.
+    Raises:
+        - `TypeError`, if:
+            - _iterable_ contains non-real-number types.
+            - _iterable_ is not iterable (propagated).
+        - `ValueError`, if the length of _iterable_ is not equal to _length_ (if specified).
     """
 
     # Allow the TypeError to be propagated if 'iterable' is not iterable.
@@ -136,7 +146,7 @@ def valid_container(iterable, length=None):
 
 
 def is_iterable(obj):
-    """Checks if obj is iterable."""
+    """Checks if _obj_ is iterable."""
 
     try:
         iter(obj)
