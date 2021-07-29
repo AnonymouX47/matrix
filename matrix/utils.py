@@ -158,59 +158,45 @@ def is_iterable(obj):
 
 def mangled_attr(*, _get=True, _set=True, _del=True):
     """
-    Enables other classes to get, set and delete attributes having
-    **mangled names** (defined in decorated classes), using the unmangled name.
+    Enables attributes (and methods) with **mangled names**, defined in a [decorated] class, to be accessible from withing other class definitions - for get, set and/or delete operations - using their unmangled names.
 
     Args:
-        The arguments that are true determine which methods will be decorated.
-        Hence, which operations will be affected.
+        The arguments that are true determine which methods will be decorated. In other words, which operations will be affected.
 
-    Returns:
-        a class decorator.
+    Returns: a class decorator.
 
-    - The other classes accessing the attributes must be decorated with or passed to
-    the `_register` method of the class decorated with this function.
-      - even subclasses of the class defining the attributes must be decorated
-      with this method in order to access the mangled attributes.
-    - Only works if the attribute is referenced within the other class's definition.
+    Use/Working:
+    - The other classes accessing the attributes must be decorated with or passed to the `_register` method of the class decorated with this function.
+      - even subclasses of the class defining the attributes must be decorated with this method in order to access the mangled attributes.
+    - Only works if the attribute is referenced **within the other class' definition**.
+    - the attribute must be referenced via an [direct or indirect] instance of the decorated class. Hence mangled class attributes cannot be referenced via the class.
     - Works "recursively" for classes decorated with this function i.e
       - if class A is decorated by this function, and
       - B is a subclass of A and also decorated with this function
-      - then, mangled attributes of both B and A can be directly accessed via
-        an instance of B from within another class's definition.
+      - then mangled attributes defined in B or A can be directly accessed via an instance of B from within the definition of another class registered to both A and B, in any order.
       - etc...
-    - Subclasses of the decorated class don't inherit this functionality,
-    hence they must also be decorated with this function if desired.
+    - Subclasses of the decorated class don't inherit this functionality, hence they must also be decorated with this function if desired.
+      - If B (a subclass of A, which is decorated) is not decorated with this function, then only mangled attributes defined within A will be accessible via an instance of B. Also, B._register
 
     NOTE:
-    - The method applied is not perfect and can give unwanted results if
-    the name of the class from whose definition the attribute is referenced
-    has at least a set of double underscores in-between, which is not expected.
-    - This functionality comes at a slight cost, so if a mangled attribute has
-    an **un-mangled** counterpart (e.g a [read-only] descriptor),
-    that should be used **in the other classes** instead, whenever possible.
+    - The method applied is not perfect and can give unwanted results if the name of the class from whose definition the attribute is referenced has at least a set of double underscores in-between (e.g 'This__Class'), which is generally not expected.
+    - This functionality comes at a slight cost, so if a mangled attribute has an **un-mangled** counterpart (e.g a [read-only] descriptor), that should be used **in the other classes** instead, whenever possible.
     """
 
     def deco(cls):
         """
-        Overrides the getter, setter and/or deletter of cls and adds
-        two extra attributes to the class (provided at least one of
-        the methods is overriden):
-          - '_register' -> A class method used to register other classes that
-          access the mangled attributes.
-          - '_registered' -> A set containing (modified) names of registered
-          classes.
+        Decorates and overrides the getter, setter and/or deletter of _cls_ and adds two extra attributes to the class (provided at least one of the methods is overriden):
+          - '_register' -> A class method used to register other classes that access the mangled attributes.
+          - '_registered' -> A set containing (modified) names of registered classes.
 
         Args:
-            - cls -> The class to be decorated.
-        Returns:
-            The argument.
+            - _cls_ -> The class to be decorated.
+        Returns: The argument.
         """
 
         def retry_mangled(get_set_del):
             """
-            Decorates the getter, setter or deleter of _cls_ to retry for mangled names
-            after "re-mangling" the attribute name with the name of _cls_.
+            Decorates the getter, setter or deleter of _cls_ to retry for mangled names after "re-mangling" the attribute name with the name of _cls_.
             """
 
             cls_name = cls.__name__
@@ -221,14 +207,14 @@ def mangled_attr(*, _get=True, _set=True, _del=True):
                 try:
                     return get_set_del(self, name, *args)
                 except AttributeError as err:
-                    split = name.split('__', 1)
-                    if (len(split) == 2 and split[0] in cls._registered):
+                    other_cls, _, name = name.partition('__')
+                    if name and other_cls in cls._registered:
                         try:
                             return get_set_del(
-                                            self,
-                                            "_%s__%s" % (cls_name, split[1]),
-                                            *args
-                                            )
+                                               self,
+                                               "_%s__%s" % (cls_name, name),
+                                               *args
+                                              )
                         except AttributeError:
                             raise err from None
                     raise
@@ -242,26 +228,18 @@ def mangled_attr(*, _get=True, _set=True, _del=True):
 
         if any((_get, _set, _del)):
 
-            def _register(cls, *othercls):
+            def _register(*othercls):
                 """
-                Registers a/some class(es) for "re-mangling"
-                of mangled attributes of _cls_ instances referenced within
-                the definition of the other class(es).
+                Registers a/some class(es) for "re-mangling" of mangled attributes of _cls_ instances referenced within the definition of this/these other class(es).
 
                 Args:
-                    - cls -> Owner of the method.
                     - othercls -> The class/classes (in a tuple) to be registered.
-                Returns:
-                    The last argument or None if no argument was passed.
-                Raises:
-                    TypeError if an argument is not a class object.
+                Returns: The last argument or None if no argument was passed.
+                Raises: `TypeError`, if an argument is not a class object.
 
-                Note: It is to be set as a classmethod of the class (_cls_) having
-                the attriutes with mangled names, hence can be used thus:
-                    - with `@cls._register` in definition of another class
-                    that accesses those attributes.
-                    - Direct call to `cls._register(class1, ...)`
-                    this way, it can accept multiple of the other classes at once.
+                Note: It is to be set as a static method of the class having the attriutes with mangled names, hence can be used thus:
+                    - with `@cls._register` in the definition of another class that accesses those attributes.
+                    - Direct call to `cls._register(class1, ...)` this way, it can accept multiple of the other classes at once.
                 """
 
                 for other in othercls:
@@ -277,7 +255,7 @@ def mangled_attr(*, _get=True, _set=True, _del=True):
             _register.__qualname__ = cls.__qualname__ + '._register'
             _register.__module__ = cls.__module__
 
-            cls._register = classmethod(_register)
+            cls._register = staticmethod(_register)
             cls._registered = set()
 
         return cls

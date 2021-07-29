@@ -144,3 +144,63 @@ def test_valid_2D_iterable():
     with pytest.raises(ValueError, match=".* empty."):
         valid_2D_iterable([])
 
+
+
+#Tests for mangled_attr()
+
+@mangled_attr()
+class A:
+    __a_class = "A.a"
+    def __init__(self):
+        self.__a_self = "A().a"
+
+@A._register
+class TestA:
+    def test(self):
+        a = A()
+        assert a.__a_class == "A.a"
+        assert a.__a_self == "A().a"
+        # Cannot be referenced via the class
+        with pytest.raises(AttributeError):
+            A.__a_class
+
+class B(A):
+    __b_class = "B.b"
+    def __init__(self):
+        super().__init__()
+        self.__b_self = "B().b"
+
+@B._register  # Is actually registered to A
+class TestB:
+    def test(self):
+        b = B()
+        assert b.__a_class == "A.a"
+        assert b.__a_self == "A().a"
+        # B was not decorated with `mangle_attr()`
+        with pytest.raises(AttributeError):
+            b.__b_class
+        with pytest.raises(AttributeError):
+            b.__b_self
+
+@mangled_attr()
+class C(B):
+    __c_class = "C.c"
+    def __init__(self):
+        super().__init__()
+        self.__c_self = "C().c"
+
+# Multi-level decoration
+@C._register
+@B._register  # Is actually registered to A
+class TestC:
+    def test(self):
+        c = C()
+        assert c.__a_class == "A.a"
+        assert c.__a_self == "A().a"
+        assert c.__c_class == "C.c"
+        assert c.__c_self == "C().c"
+        with pytest.raises(AttributeError):
+            c.__b_class
+        with pytest.raises(AttributeError):
+            c.__b_self
+
