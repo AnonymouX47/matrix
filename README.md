@@ -192,10 +192,7 @@ pip uninstall matrix
 
 If you find any bug or have any suggestion for an improvement, please create an **Issue** in the [Issues section](https://github.com/AnonymouX47/matrix/issues), they're greatly welcome.
 
-Please make sure you check other issues first to make sure you don't create a duplicate.
-
-As much as this was originally a personal practice project, I could still **learn** from your **contributions**.
-The project is open to Pull Requests if you want to contribute to the code but please make sure you go through the [contribution guidelines](CONTRIBUTING.md) (don't worry, it's brief and not so strict :grinning:).
+Please make sure you check other issues first, to make sure you don't create a duplicate. Thank you :smile:
 
 
 ## TODO
