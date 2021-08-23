@@ -1,11 +1,12 @@
 from setuptools import setup
+from matrix.__version__ import version
 
 with open('README.md') as f:
     long_desc = f.read()
 
 setup(
     name="matrix",
-    version="0.0.1",
+    version=version,
     author="AnonymouX47",
     description="A python package for matrix operations and manipulations.",
     long_description=long_desc,
