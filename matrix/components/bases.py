@@ -7,9 +7,10 @@ from operator import add, mul, truediv, sub
 
 from .elements import Element
 from .. import utils  # Only meant to be used for `ROUND_LIMIT`
-from ..utils import (display_adj_slice, is_iterable, mangled_attr, slice_length,
-                    valid_container, BrokenMatrixView,
-                    )
+from ..exceptions import BrokenMatrixView
+from ..utils import (
+    display_adj_slice, is_iterable, mangled_attr, slice_length, valid_container,
+)
 
 __all__ = ("RowsColumns", "RowsColumnsSlice", "RowColumn")
 

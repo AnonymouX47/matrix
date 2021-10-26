@@ -2,15 +2,15 @@
 
 from decimal import Decimal
 from math import prod
-from multiprocessing import Pool
 from numbers import Real
 from operator import add, itemgetter, mul, sub
 
 from .components import Element, to_Element, Rows, Columns
-from . import utils  # Only meant to be used for `ROUND_LIMIT`
+from .exceptions import InvalidDimension, ZeroDeterminant
 from .utils import (adjust_slice, slice_length, valid_2D_iterable, valid_container,
-                    is_iterable, mangled_attr, InvalidDimension, ZeroDeterminant,
+                    is_iterable, mangled_attr,
                     )
+from . import utils  # Only meant to be used for `ROUND_LIMIT`
 
 __all__ = ("Matrix", "unit_matrix")
 
