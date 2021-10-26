@@ -1,5 +1,6 @@
 """Baseclasses of rows and columns classes."""
 
+from abc import ABCMeta, abstractmethod
 from decimal import Decimal
 from numbers import Real
 from operator import add, mul, truediv, sub
@@ -14,7 +15,7 @@ __all__ = ("RowsColumns", "RowsColumnsSlice", "RowColumn")
 
 
 @mangled_attr(_set=False, _del=False)
-class RowsColumns:
+class RowsColumns(metaclass=ABCMeta):
     """Baseclass of Rows() and Columns()."""
 
     # mainly to disable abitrary atributes.
@@ -28,9 +29,29 @@ class RowsColumns:
     def __repr__(self):
         return f"<{type(self).__name__} of {self.__matrix!r}>"
 
+    @abstractmethod
+    def __getitem__(self, sub):
+        raise NotImplementedError
+
+    @abstractmethod
+    def __setitem__(self, sub, value):
+        raise NotImplementedError
+
+    @abstractmethod
+    def __delitem__(self, sub):
+        raise NotImplementedError
+
+    @abstractmethod
+    def __len__(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def __iter__(self):
+        raise NotImplementedError
+
 
 @mangled_attr(_set=False, _del=False)
-class RowsColumnsSlice:
+class RowsColumnsSlice(metaclass=ABCMeta):
     """Baseclass of RowsSlice() and ColumnsSlice()."""
 
     # mainly to disable abitrary atributes.
@@ -64,9 +85,17 @@ class RowsColumnsSlice:
                                     f" this matrix-view ({self!r}) was created.",
                                     view_obj=self)
 
+    @abstractmethod
+    def __getitem__(self, sub):
+        raise NotImplementedError
+
+    @abstractmethod
+    def __iter__(self):
+        raise NotImplementedError
+
 
 @mangled_attr(_set=False, _del=False)
-class RowColumn:
+class RowColumn(metaclass=ABCMeta):
     """Baseclass of Row() and Column()."""
 
     # mainly to disable abitrary atributes.
@@ -267,6 +296,54 @@ class RowColumn:
             raise BrokenMatrixView("The matrix has been resized after"
                                     f" this matrix-view ({self!r}) was created.",
                                     view_obj=self)
+
+    @abstractmethod
+    def __str__(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def __getitem__(self, sub):
+        raise NotImplementedError
+
+    @abstractmethod
+    def __setitem__(self, sub, value):
+        raise NotImplementedError
+
+    @abstractmethod
+    def __len__(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def __iter__(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def __contains__(self, item):
+        raise NotImplementedError
+
+    @abstractmethod
+    def __eq__(self, other):
+        raise NotImplementedError
+
+    @abstractmethod
+    def __iadd__(self, other):
+        raise NotImplementedError
+
+    @abstractmethod
+    def __isub__(self, other):
+        raise NotImplementedError
+
+    @abstractmethod
+    def __imul__(self, other):
+        raise NotImplementedError
+
+    @abstractmethod
+    def __imatmul__(self, other):
+        raise NotImplementedError
+
+    @abstractmethod
+    def __itruediv__(self, other):
+        raise NotImplementedError
 
 
 # Utility functions
