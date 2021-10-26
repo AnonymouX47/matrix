@@ -21,13 +21,6 @@ __all__ = ("Matrix", "MatrixException", "InvalidDimension", "BrokenMatrixView",
             )
 
 
-# Excludes submodule names from displayed full names.
-for obj in (Matrix, MatrixException, InvalidDimension, BrokenMatrixView,
-            ZeroDeterminant, unit_matrix):
-    obj.__module__ = "matrix"
-del obj
-
-
 def randint_matrix(nrow: int, ncol: int, _range, /):
     """
     Generates a matrix with random integer elements.
