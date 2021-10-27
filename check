@@ -1,4 +1,4 @@
 #!/bin/sh
 black -l 90 --diff --color --exclude samples/ .
 echo
-flake8 --max-line-length 90 --ignore F401,F403,F405,W503,E266,E203,E501 ./
+flake8 --max-line-length 90 --ignore F401,F403,F405,W503,E266,E203,E501 --per-file-ignores test.py:W291 .

@@ -483,7 +483,7 @@ class Matrix:
         """Matrix Augmentation"""
 
         if not isinstance(other, __class__):
-            return Notimplemented
+            return NotImplemented
         if self.__nrow != other.__nrow:
             raise InvalidDimension("The number of rows the matrices must be equal.")
 
@@ -985,7 +985,7 @@ class Matrix:
     def is_orthogonal(self):
         """Returns `True` if the matrix is orthogonal and `False` otherwise."""
 
-        return (m @ m.transposed()).is_unit()
+        return (self @ self.transposed()).is_unit()
 
     def is_square(self):
         """Returns `True` if the matrix is square and `False` otherwise."""
