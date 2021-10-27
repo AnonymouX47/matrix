@@ -13,5 +13,5 @@ __pycache__/
 # package build and install directories
 build/
 dist/
-matrix.egg-info/
+*.egg-info/
 
