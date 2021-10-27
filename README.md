@@ -130,8 +130,19 @@ These are views of the matrix object, like `.keys()` and `.values()` are to `dic
 ### Requirements
 - Python >= 3.8
 
-### Steps
+### Install from PyPI
+NOTE: You must have the `pip` python package installed (usually is, by default)
 
+Run
+```sh
+pip install matrix-47
+```
+OR
+```sh
+python -m pip install matrix-47
+```
+
+### Install from source
 Download and unzip [this repository](https://github.com/AnonymouX47/matrix/archive/refs/heads/main.zip) or run
 ```sh
 git clone https://github.com/AnonymouX47/matrix
@@ -147,11 +158,6 @@ Then, run
 pip install .
 
 ```
-OR
-```sh
-python setup.py install
-```
-to install the package.
 
 * * *
 
@@ -190,12 +196,12 @@ For the complete feature list and descriptions, see [Feature Description](https:
 
 To uninstall the package, run
 ```sh
-pip uninstall matrix
+pip uninstall matrix-47
 ```
 
 
 ## Contributing
 
 If you find any bug, please create an **Issue** in the [Issues section](https://github.com/AnonymouX47/matrix/issues).
-Please make sure you check other issues first, to make sure you don't create a duplicate. Thank you :smile:
+Please make sure you check other issues first, to make sure you don't create a duplicate. Thank you :smiley:
 
