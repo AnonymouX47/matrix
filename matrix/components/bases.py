@@ -9,7 +9,11 @@ from .elements import Element
 from .. import utils  # Only meant to be used for `ROUND_LIMIT`
 from ..exceptions import BrokenMatrixView
 from ..utils import (
-    display_adj_slice, is_iterable, mangled_attr, slice_length, valid_container,
+    display_adj_slice,
+    is_iterable,
+    mangled_attr,
+    slice_length,
+    valid_container,
 )
 
 __all__ = ("RowsColumns", "RowsColumnsSlice", "RowColumn")
@@ -82,9 +86,11 @@ class RowsColumnsSlice(metaclass=ABCMeta):
         """
 
         if self.__size_hash != hash(self.__matrix.size):
-            raise BrokenMatrixView("The matrix has been resized after"
-                                    f" this matrix-view ({self!r}) was created.",
-                                    view_obj=self)
+            raise BrokenMatrixView(
+                "The matrix has been resized after"
+                f" this matrix-view ({self!r}) was created.",
+                view_obj=self,
+            )
 
     @abstractmethod
     def __getitem__(self, sub):
@@ -112,7 +118,6 @@ class RowColumn(metaclass=ABCMeta):
     def __repr__(self):
         return f"<{type(self).__name__} {self.__index + 1} of {self.__matrix!r}>"
 
-
     # The following operations must not return Row/Column instances
     # because they are views of the underlying matrix,
     # which is not being modified itself.
@@ -129,9 +134,7 @@ class RowColumn(metaclass=ABCMeta):
 
         if isinstance(other, __class__):
             if len(self) == len(other):
-                return _rounded(list(map(
-                            add, self._fast_iter(), other._fast_iter()
-                            )))
+                return _rounded(list(map(add, self._fast_iter(), other._fast_iter())))
             raise ValueError("The rows/columns must be of equal length.")
 
         if is_iterable(other):
@@ -157,9 +160,7 @@ class RowColumn(metaclass=ABCMeta):
 
         if isinstance(other, __class__):
             if len(self) == len(other):
-                return _rounded(list(map(
-                            sub, self._fast_iter(), other._fast_iter()
-                            )))
+                return _rounded(list(map(sub, self._fast_iter(), other._fast_iter())))
             raise ValueError("The rows/columns must be of equal length.")
 
         if is_iterable(other):
@@ -175,9 +176,7 @@ class RowColumn(metaclass=ABCMeta):
 
         if isinstance(other, __class__):
             if len(self) == len(other):
-                return _rounded(list(map(
-                            sub, other._fast_iter(), self._fast_iter()
-                            )))
+                return _rounded(list(map(sub, other._fast_iter(), self._fast_iter())))
             raise ValueError("The rows/columns must be of equal length.")
 
         if is_iterable(other):
@@ -215,9 +214,7 @@ class RowColumn(metaclass=ABCMeta):
 
         if isinstance(other, __class__):
             if len(self) == len(other):
-                return _rounded(list(map(
-                            mul, self._fast_iter(), other._fast_iter()
-                            )))
+                return _rounded(list(map(mul, self._fast_iter(), other._fast_iter())))
             raise ValueError("The rows/columns must be of equal length.")
 
         if is_iterable(other):
@@ -246,9 +243,7 @@ class RowColumn(metaclass=ABCMeta):
 
         if isinstance(other, __class__):
             if len(self) == len(other):
-                return _rounded(list(map(
-                            truediv, self._fast_iter(), other._fast_iter()
-                            )))
+                return _rounded(list(map(truediv, self._fast_iter(), other._fast_iter())))
             raise ValueError("The rows/columns must be of equal length.")
 
         if is_iterable(other):
@@ -267,9 +262,7 @@ class RowColumn(metaclass=ABCMeta):
 
         if isinstance(other, __class__):
             if len(self) == len(other):
-                return _rounded(list(map(
-                            truediv, other._fast_iter(), self._fast_iter()
-                            )))
+                return _rounded(list(map(truediv, other._fast_iter(), self._fast_iter())))
             raise ValueError("The rows/columns must be of equal length.")
 
         if is_iterable(other):
@@ -286,7 +279,6 @@ class RowColumn(metaclass=ABCMeta):
 
         return any(self._fast_iter())
 
-
     def __validity_check(self):
         """
         Raises an error if the matrix has been resized
@@ -294,9 +286,11 @@ class RowColumn(metaclass=ABCMeta):
         """
 
         if self.__size_hash != hash(self.__matrix.size):
-            raise BrokenMatrixView("The matrix has been resized after"
-                                    f" this matrix-view ({self!r}) was created.",
-                                    view_obj=self)
+            raise BrokenMatrixView(
+                "The matrix has been resized after"
+                f" this matrix-view ({self!r}) was created.",
+                view_obj=self,
+            )
 
     @abstractmethod
     def __str__(self):
@@ -349,11 +343,8 @@ class RowColumn(metaclass=ABCMeta):
 
 # Utility functions
 
+
 def _rounded(row_col: list) -> list:
     limit = Element(f"1e-{utils.ROUND_LIMIT}")
 
-    return [Element(round(x))
-                if 0 < abs(x - round(x)) < limit
-                else x
-            for x in row_col]
-
+    return [Element(round(x)) if 0 < abs(x - round(x)) < limit else x for x in row_col]

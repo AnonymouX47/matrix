@@ -46,7 +46,7 @@ class MethodDecoMeta(type):
         Updates attributes in the namespace of the new class
         using the decorators and order specified in 'decorated'.
         """
-        
+
         # The mro will be needed for the resolution of inherited attributes.
         new_cls = type.__new__(cls, name, bases, namespace, **kwds)
 
@@ -58,12 +58,12 @@ class MethodDecoMeta(type):
             raise TypeError("'decorated' must be a dictionary.")
 
         error = 0
-        errors = (None,
-                    TypeError(
-                        "The values in 'decorated' must contain strings only."),
-                    TypeError("The decorators must be callable."),
-                    TypeError( "All values in 'decorated' must be iterable.")
-                    )
+        errors = (
+            None,
+            TypeError("The values in 'decorated' must contain strings only."),
+            TypeError("The decorators must be callable."),
+            TypeError("All values in 'decorated' must be iterable."),
+        )
 
         # It's **less costly** to ask for forgiveness than permission
         # since any program using this shouldn't even proceed
@@ -85,16 +85,19 @@ class MethodDecoMeta(type):
                             if attr in _cls.__dict__:
                                 obj = _cls.__dict__.get(attr)
                                 setitem(
-            namespace,
-            attr,
-            (classmethod(deco(obj.__func__)) if isinstance(obj, classmethod)
-            else staticmethod(deco(obj.__func__)) if isinstance(obj, staticmethod)
-            else deco(obj))
-            )
+                                    namespace,
+                                    attr,
+                                    (
+                                        classmethod(deco(obj.__func__))
+                                        if isinstance(obj, classmethod)
+                                        else staticmethod(deco(obj.__func__))
+                                        if isinstance(obj, staticmethod)
+                                        else deco(obj)
+                                    ),
+                                )
                                 break
                         else:
-                            raise AttributeError(
-                                        "The class has no attribute %r." % attr)
+                            raise AttributeError("The class has no attribute %r." % attr)
                     except TypeError as err:
                         print(err)
                         error = 2
@@ -106,4 +109,3 @@ class MethodDecoMeta(type):
                 raise errors[error]
 
         return type.__new__(cls, name, bases, namespace, **kwds)
-

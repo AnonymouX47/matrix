@@ -7,9 +7,14 @@ from numbers import Real
 from .bases import *
 from .elements import to_Element
 from ..exceptions import InvalidDimension
-from ..utils import (adjust_slice, slice_length, slice_index, original_slice,
-                    valid_container, MatrixIter,
-                    )
+from ..utils import (
+    adjust_slice,
+    slice_length,
+    slice_index,
+    original_slice,
+    valid_container,
+    MatrixIter,
+)
 
 __all__ = ("Rows",)
 
@@ -32,7 +37,7 @@ class Rows(RowsColumns):
 
         if isinstance(sub, int):
             if 0 < sub <= self.__matrix.nrow:
-                return Row(self.__matrix, sub-1)
+                return Row(self.__matrix, sub - 1)
             raise IndexError("Index out of range.")
         elif isinstance(sub, slice):
             sub = adjust_slice(sub, self.__matrix.nrow)
@@ -56,7 +61,7 @@ class Rows(RowsColumns):
 
         if 0 < sub <= self.__matrix.nrow:
             value = valid_container(value, self.__matrix.ncol)
-            self.__matrix._array[sub-1][:] = value
+            self.__matrix._array[sub - 1][:] = value
         else:
             raise IndexError("Index out of range.")
 
@@ -74,9 +79,10 @@ class Rows(RowsColumns):
         if isinstance(sub, int):
             if 0 < sub <= self.__matrix.nrow:
                 if self.__matrix.nrow == 1:
-                    raise InvalidDimension("Emptying the matrix isn't allowed.",
-                                            matrices=(self.__matrix,))
-                del self.__matrix._array[sub-1]
+                    raise InvalidDimension(
+                        "Emptying the matrix isn't allowed.", matrices=(self.__matrix,)
+                    )
+                del self.__matrix._array[sub - 1]
                 self.__matrix.__nrow -= 1
             else:
                 raise IndexError("Index out of range.")
@@ -94,8 +100,8 @@ class Rows(RowsColumns):
 
     def __iter__(self):
         return MatrixIter(
-                    map(partial(Row, self.__matrix), range(self.__matrix.nrow)),
-                    self.__matrix)
+            map(partial(Row, self.__matrix), range(self.__matrix.nrow)), self.__matrix
+        )
 
 
 @RowsColumnsSlice._register
@@ -124,7 +130,7 @@ class RowsSlice(RowsColumnsSlice):
 
         if isinstance(sub, int):
             if 0 < sub <= self.__length:
-                return Row(self.__matrix, slice_index(self.__slice, sub-1))
+                return Row(self.__matrix, slice_index(self.__slice, sub - 1))
             raise IndexError("Index out of range.")
         elif isinstance(sub, slice):
             sub = adjust_slice(sub, self.__length)
@@ -135,9 +141,13 @@ class RowsSlice(RowsColumnsSlice):
     def __iter__(self):
         self.__validity_check()
 
-        return MatrixIter(map(partial(Row, self.__matrix),
-                                    range(*self.__slice.indices(self.__slice.stop))),
-                            self.__matrix)
+        return MatrixIter(
+            map(
+                partial(Row, self.__matrix),
+                range(*self.__slice.indices(self.__slice.stop)),
+            ),
+            self.__matrix,
+        )
 
 
 @RowColumn._register
@@ -177,7 +187,7 @@ class Row(RowColumn):
 
         if isinstance(sub, int):
             if 0 < sub <= self.__matrix.ncol:
-                return self.__matrix._array[self.__index][sub-1]
+                return self.__matrix._array[self.__index][sub - 1]
             raise IndexError("Index out of range.")
 
         elif isinstance(sub, slice):
@@ -199,7 +209,7 @@ class Row(RowColumn):
         if isinstance(sub, int):
             if 0 < sub <= self.__matrix.ncol:
                 if isinstance(value, (Real, Decimal)):
-                    self.__matrix._array[self.__index][sub-1] = to_Element(value)
+                    self.__matrix._array[self.__index][sub - 1] = to_Element(value)
                 else:
                     raise TypeError("Matrix elements can only be real numbers.")
             else:
@@ -245,7 +255,6 @@ class Row(RowColumn):
 
             return lhs == rhs
 
-
     # In-place operations
     # These modify the matrix directly
 
@@ -284,7 +293,6 @@ class Row(RowColumn):
 
         return result
 
-
     # Explicit
 
     @property
@@ -292,7 +300,8 @@ class Row(RowColumn):
         """Returns the index of the pivot (first non-zero) element of the row."""
 
         for i, elem in enumerate(self.__matrix._array[self.__index], 1):
-            if elem: return i
+            if elem:
+                return i
         else:
             # Zero is never a possible index in the matrix
             return 0  # Zero row.
@@ -301,4 +310,3 @@ class Row(RowColumn):
         """Meant to be used internally for faster iteration"""
 
         return iter(self.__matrix._array[self.__index])
-

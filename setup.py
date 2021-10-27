@@ -1,7 +1,7 @@
 from setuptools import setup
 from matrix.__version__ import version
 
-with open('README.md') as f:
+with open("README.md") as f:
     long_desc = f.read()
 
 setup(
@@ -26,4 +26,3 @@ setup(
     packages=["matrix"],
     python_requires=">=3.8",
 )
-

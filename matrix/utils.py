@@ -13,8 +13,10 @@ def display_slice(s: slice):
     """Returns a colon-separated string representation of a slice."""
 
     # `or` can't be used in case the attribute is 0.
-    return "{}:{}{}".format(*(x if x is not None else '' for x in (s.start, s.stop)),
-                            f":{s.step}" if s.step is not None else '')
+    return "{}:{}{}".format(
+        *(x if x is not None else "" for x in (s.start, s.stop)),
+        f":{s.step}" if s.step is not None else "",
+    )
 
 
 def display_adj_slice(s: slice):
@@ -25,7 +27,7 @@ def display_adj_slice(s: slice):
         - _s_ _ -> a slice object, as returned by `adjust_slice()`.
     """
 
-    return "{}:{}{}".format(s.start + 1, s.stop, f":{s.step}" if s.step > 1 else '')
+    return "{}:{}{}".format(s.start + 1, s.stop, f":{s.step}" if s.step > 1 else "")
 
 
 def adjust_slice(s: slice, length: int) -> slice:
@@ -40,30 +42,32 @@ def adjust_slice(s: slice, length: int) -> slice:
     """
 
     if any(None is not x < 1 for x in (s.start, s.stop, s.step)):
-        raise ValueError("%r -> 'start', 'stop' or 'step' is less than 1."
-                         % display_slice(s))
+        raise ValueError(
+            "%r -> 'start', 'stop' or 'step' is less than 1." % display_slice(s)
+        )
     if s.stop is None:  # 'stop' is not given...
         # Can't combine these two conditions,
         # so as not to affect the logic of the `elif` below.
         if None is not s.start > length:  # ...but 'start' is given and > `length`
-            raise ValueError("%r -> 'start' of slice is out of range (max: %d)."
-                             % (display_slice(s), length))
+            raise ValueError(
+                "%r -> 'start' of slice is out of range (max: %d)."
+                % (display_slice(s), length)
+            )
     elif None is not s.start > s.stop:
         # 'stop' is given and ('start' is given and > 'stop')
-        raise ValueError("'start' > 'stop' in slice %r."
-                         % display_slice(s))
+        raise ValueError("'start' > 'stop' in slice %r." % display_slice(s))
 
     s = s.indices(length)
 
     # Leaves the 'stop' attribute unchanged,
     # since matrixes include the (1-indexed) 'stop' index for slicing operations.
-    return slice(max(0, s[0]-1), *s[1:])
+    return slice(max(0, s[0] - 1), *s[1:])
 
 
 def slice_length(s: slice):
     """Returns the number of items selected by an **adjusted** slice."""
 
-    return ceil((s.stop-s.start) / s.step)
+    return ceil((s.stop - s.start) / s.step)
 
 
 def slice_index(s: slice, index: int):
@@ -87,10 +91,9 @@ def original_slice(s1: slice, s2: slice):
     Returns: the equivalent of _s2_ for the original sequence sliced by _s1_.
     """
 
-    return slice(slice_index(s1, s2.start),
-                 slice_index(s1, s2.stop-1) + 1,
-                 s1.step * s2.step
-                )
+    return slice(
+        slice_index(s1, s2.start), slice_index(s1, s2.stop - 1) + 1, s1.step * s2.step
+    )
 
 
 def valid_2D_iterable(iterable):
@@ -121,8 +124,12 @@ def valid_2D_iterable(iterable):
     else:
         raise ValueError("The given iterable is empty.")
 
-    return (min(lengths), max(lengths), len(array),
-            [[to_Element(x) for x in row] for row in array])
+    return (
+        min(lengths),
+        max(lengths),
+        len(array),
+        [[to_Element(x) for x in row] for row in array],
+    )
 
 
 def valid_container(iterable, length=None):
@@ -209,24 +216,22 @@ def mangled_attr(*, _get=True, _set=True, _del=True):
                 try:
                     return get_set_del(self, name, *args)
                 except AttributeError as err:
-                    other_cls, _, name = name.partition('__')
+                    other_cls, _, name = name.partition("__")
                     if name and other_cls in cls._registered:
                         try:
-                            return get_set_del(
-                                               self,
-                                               "_%s__%s" % (cls_name, name),
-                                               *args
-                                              )
+                            return get_set_del(self, "_%s__%s" % (cls_name, name), *args)
                         except AttributeError:
                             raise err from None
                     raise
 
             return wrapper
 
-
-        if _get: cls.__getattribute__ = retry_mangled(cls.__getattribute__)
-        if _set: cls.__setattr__ = retry_mangled(cls.__setattr__)
-        if _del: cls.__delattr__ = retry_mangled(cls.__delattr__)
+        if _get:
+            cls.__getattribute__ = retry_mangled(cls.__getattribute__)
+        if _set:
+            cls.__setattr__ = retry_mangled(cls.__setattr__)
+        if _del:
+            cls.__delattr__ = retry_mangled(cls.__delattr__)
 
         if any((_get, _set, _del)):
 
@@ -249,12 +254,12 @@ def mangled_attr(*, _get=True, _set=True, _del=True):
                         raise TypeError("Only classes can be registered.")
 
                     # Leading underscores of the class name is stripped in mangled names.
-                    cls._registered.add('_' + other.__name__.lstrip('_'))
+                    cls._registered.add("_" + other.__name__.lstrip("_"))
 
                 # Avoids an UnboundLocalError if no argument is given
                 return other if othercls else None
 
-            _register.__qualname__ = cls.__qualname__ + '._register'
+            _register.__qualname__ = cls.__qualname__ + "._register"
             _register.__module__ = cls.__module__
 
             cls._register = staticmethod(_register)
@@ -300,8 +305,9 @@ class MatrixIter:
 
     def __next__(self):
         if self.__size != self.__matrix.size:
-            raise BrokenMatrixView("The matrix was resized during iteration.",
-                                    view_obj=self)
+            raise BrokenMatrixView(
+                "The matrix was resized during iteration.", view_obj=self
+            )
 
         return next(self.__iter)  # StopIteration is also propagated.
 
@@ -310,4 +316,3 @@ class MatrixIter:
 # This value is used to subdue floating-point issues in many operations.
 # Any number with a magnitude below 1e-(ROUND_LIMIT) is considered a zero.
 ROUND_LIMIT = 12
-

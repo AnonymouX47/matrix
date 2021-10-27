@@ -10,15 +10,27 @@ Copyright 2021
 
 from random import choices, random, randrange
 
-from .exceptions import (MatrixException, BrokenMatrixView, InvalidDimension,
-                    ZeroDeterminant)
+from .exceptions import (
+    MatrixException,
+    BrokenMatrixView,
+    InvalidDimension,
+    ZeroDeterminant,
+)
 from .matrix import *
 from . import utils  # Only meant to be used for `ROUND_LIMIT`
 
-__all__ = ("Matrix", "MatrixException", "InvalidDimension", "BrokenMatrixView",
-            "ZeroDeterminant", "unit_matrix", "randint_matrix", "random_matrix",
-            "solve_linear_system", "set_round_limit",
-            )
+__all__ = (
+    "Matrix",
+    "MatrixException",
+    "InvalidDimension",
+    "BrokenMatrixView",
+    "ZeroDeterminant",
+    "unit_matrix",
+    "randint_matrix",
+    "random_matrix",
+    "solve_linear_system",
+    "set_round_limit",
+)
 
 
 def randint_matrix(nrow: int, ncol: int, _range, /):
@@ -76,8 +88,9 @@ def random_matrix(nrow: int, ncol: int, start: int, stop: int, /):
         raise ValueError("Matrix dimensions must be greater than zero.")
 
     try:
-        matrix = Matrix((randrange(start, stop) + random()
-                        for _ in range(ncol)) for _ in range(nrow))
+        matrix = Matrix(
+            (randrange(start, stop) + random() for _ in range(ncol)) for _ in range(nrow)
+        )
     except ValueError:
         raise ValueError("The given range is empty.") from None
 
@@ -129,4 +142,3 @@ def set_round_limit(ndigits: int):
         raise TypeError("The argument must be an integer.")
 
     utils.ROUND_LIMIT = ndigits
-

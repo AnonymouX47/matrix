@@ -26,13 +26,14 @@ def numeric_deco(func):
         result = func(self, other, *args)
 
         if result is NotImplemented and isinstance(other, float):
-            result = func(self,
-                          Decimal(other if other.is_integer() else str(other)),
-                          *args)
+            result = func(
+                self, Decimal(other if other.is_integer() else str(other)), *args
+            )
 
         return result if result is NotImplemented else type(self)(result)
 
     return wrapper
+
 
 def unary_deco(func):
     """
@@ -47,18 +48,19 @@ def unary_deco(func):
     return wrapper
 
 
-numerics = [fmt.format(name)
-                for fmt in ("__{}__", "__r{}__")
-                    for name in ("add sub mul truediv floordiv mod divmod pow")
-                                .split(' ')
-            ]
-unaries = map("__{}__".format, "abs pos neg".split(' '))
+numerics = [
+    fmt.format(name)
+    for fmt in ("__{}__", "__r{}__")
+    for name in ("add sub mul truediv floordiv mod divmod pow").split(" ")
+]
+unaries = map("__{}__".format, "abs pos neg".split(" "))
 
 
-class Element(Decimal,
-              metaclass=MethodDecoMeta,
-              decorated={numeric_deco: numerics, unary_deco: unaries}
-              ):
+class Element(
+    Decimal,
+    metaclass=MethodDecoMeta,
+    decorated={numeric_deco: numerics, unary_deco: unaries},
+):
     """
     A matrix element.
 
@@ -102,4 +104,3 @@ def to_Element(value):
         value = Element(value)
 
     return Element(round(value) if 0 < abs(value - round(value)) < limit else value)
-

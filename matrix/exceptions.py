@@ -47,4 +47,3 @@ class ZeroDeterminant(MatrixException, ArithmeticError):
     def __init__(self, *args, matrix):
         super().__init__(*args)
         self.matrix = matrix
-

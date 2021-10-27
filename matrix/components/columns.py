@@ -7,9 +7,14 @@ from numbers import Real
 from .bases import *
 from .elements import to_Element
 from ..exceptions import InvalidDimension
-from ..utils import (adjust_slice, slice_length, slice_index, original_slice,
-                    valid_container, MatrixIter,
-                    )
+from ..utils import (
+    adjust_slice,
+    slice_length,
+    slice_index,
+    original_slice,
+    valid_container,
+    MatrixIter,
+)
 
 __all__ = ("Columns",)
 
@@ -32,7 +37,7 @@ class Columns(RowsColumns):
 
         if isinstance(sub, int):
             if 0 < sub <= self.__matrix.ncol:
-                return Column(self.__matrix, sub-1)
+                return Column(self.__matrix, sub - 1)
             raise IndexError("Index out of range.")
 
         elif isinstance(sub, slice):
@@ -58,7 +63,7 @@ class Columns(RowsColumns):
         if 0 < sub <= self.__matrix.ncol:
             value = valid_container(value, self.__matrix.nrow)
             for row, element in zip(self.__matrix._array, value):
-                row[sub-1] = to_Element(element)
+                row[sub - 1] = to_Element(element)
         else:
             raise IndexError("Index out of range.")
 
@@ -76,8 +81,9 @@ class Columns(RowsColumns):
         if isinstance(sub, int):
             if 0 < sub <= self.__matrix.ncol:
                 if self.__matrix.ncol == 1:
-                    raise InvalidDimension("Emptying the matrix isn't allowed.",
-                                            matrices=(self.__matrix,))
+                    raise InvalidDimension(
+                        "Emptying the matrix isn't allowed.", matrices=(self.__matrix,)
+                    )
                 sub -= 1
                 for row in self.__matrix._array:
                     del row[sub]
@@ -100,8 +106,8 @@ class Columns(RowsColumns):
 
     def __iter__(self):
         return MatrixIter(
-                map(partial(Column, self.__matrix), range(self.__matrix.ncol)),
-                self.__matrix)
+            map(partial(Column, self.__matrix), range(self.__matrix.ncol)), self.__matrix
+        )
 
 
 @RowsColumnsSlice._register
@@ -129,7 +135,7 @@ class ColumnsSlice(RowsColumnsSlice):
 
         if isinstance(sub, int):
             if 0 < sub <= self.__length:
-                return Column(self.__matrix, slice_index(self.__slice, sub-1))
+                return Column(self.__matrix, slice_index(self.__slice, sub - 1))
             raise IndexError("Index out of range.")
 
         elif isinstance(sub, slice):
@@ -141,9 +147,13 @@ class ColumnsSlice(RowsColumnsSlice):
     def __iter__(self):
         self.__validity_check()
 
-        return MatrixIter(map(partial(Column, self.__matrix),
-                                range(*self.__slice.indices(self.__slice.stop))),
-                        self.__matrix)
+        return MatrixIter(
+            map(
+                partial(Column, self.__matrix),
+                range(*self.__slice.indices(self.__slice.stop)),
+            ),
+            self.__matrix,
+        )
 
 
 @RowColumn._register
@@ -183,7 +193,7 @@ class Column(RowColumn):
 
         if isinstance(sub, int):
             if 0 < sub <= self.__matrix.nrow:
-                return self.__matrix._array[sub-1][self.__index]
+                return self.__matrix._array[sub - 1][self.__index]
             raise IndexError("Index out of range.")
 
         elif isinstance(sub, slice):
@@ -205,7 +215,7 @@ class Column(RowColumn):
         if isinstance(sub, int):
             if 0 < sub <= self.__matrix.nrow:
                 if isinstance(value, (Real, Decimal)):
-                    self.__matrix._array[sub-1][self.__index] = to_Element(value)
+                    self.__matrix._array[sub - 1][self.__index] = to_Element(value)
                 else:
                     raise TypeError("Matrix elements can only be real numbers.")
             else:
@@ -228,8 +238,9 @@ class Column(RowColumn):
     def __iter__(self):
         self.__validity_check()
 
-        return MatrixIter((row[self.__index] for row in self.__matrix._array),
-                            self.__matrix)
+        return MatrixIter(
+            (row[self.__index] for row in self.__matrix._array), self.__matrix
+        )
 
     def __contains__(self, item):
         self.__validity_check()
@@ -250,9 +261,10 @@ class Column(RowColumn):
         else:
             i1 = self.__index
             i2 = other.__index
-            return all(r1[i1] == r2[i2] for r1, r2 in zip(self.__matrix._array,
-                                                            other.__matrix._array))
-
+            return all(
+                r1[i1] == r2[i2]
+                for r1, r2 in zip(self.__matrix._array, other.__matrix._array)
+            )
 
     # In-place operations
     # These modify the matrix directly
@@ -292,11 +304,9 @@ class Column(RowColumn):
 
         return result
 
-
     # Explicit
 
     def _fast_iter(self):
         """Meant to be used internally for faster iteration"""
 
         return iter([row[self.__index] for row in self.__matrix._array])
-
