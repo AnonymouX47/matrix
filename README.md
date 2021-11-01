@@ -26,12 +26,12 @@ I had just completed my "Journey through the Docs", studying the Core Python asp
 Then I needed something to put to (real) practice all the things I had learned.
 I wanted something purely **Standard** Python, no 3rd-party libraries and seemed this project would be a good place to start.
 
-The project was actually concieved in the course of my "Journey through the Docs" but only stayed on my TODO list till after.
+The project was conceived in the course of my "Journey through the Docs" but only stayed on my TODO list till after.
 
-It's been interesting so far and the project actually turned out to incoparate a lot of what I learned... though, definitely not all. :smile:
+It's been interesting so far and the project turned out to incoparate a lot of what I had learnt... though, definitely not all. :smile:
 
 **NOTE:** This project is not intended to be a "re-invention of any wheel", it's just me practicing.
-I actually didn't test out or go through any similar project in the course of developing this.
+I didn't test out or go through any similar project in the course of developing this, in order to stay unbiased and get the best out of it since it was for practice.
 
 ## Features
 
